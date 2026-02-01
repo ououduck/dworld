@@ -38,26 +38,10 @@ export const SITE_CONFIG = {
       color: "text-blue-400" 
     },
     { 
-      title: 'D-pic-erciyuan', 
+      title: 'D-pic', 
       en: 'API', 
-      desc: '随机二次元图片API接口', 
-      url: 'https://erciyuan.pic.api.pldduck.com/', 
-      icon: 'Zap', 
-      color: "text-yellow-400" 
-    },
-    { 
-      title: 'D-pic-wallpaper', 
-      en: 'API', 
-      desc: '随机壁纸图片API接口', 
-      url: 'https://wallpaper.pic.api.pldduck.com/', 
-      icon: 'Zap', 
-      color: "text-yellow-400" 
-    },
-    { 
-      title: 'D-hitokoto', 
-      en: 'API', 
-      desc: '免费随机一言API接口', 
-      url: 'https://hitokoto.api.pldduck.com/', 
+      desc: '公益API', 
+      url: 'https://api.pldduck.com/', 
       icon: 'Zap', 
       color: "text-yellow-400" 
     }
