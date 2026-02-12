@@ -38,6 +38,14 @@ export const SITE_CONFIG = {
       color: "text-blue-400" 
     },
     { 
+      title: 'D-blog', 
+      en: 'Blog', 
+      desc: 'duck的胡言乱语', 
+      url: 'https://blog.pldduck.com', 
+      icon: 'Globe', 
+      color: "text-blue-400" 
+    },
+    { 
       title: 'D-pic', 
       en: 'API', 
       desc: '公益API', 
