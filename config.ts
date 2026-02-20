@@ -94,11 +94,13 @@ export const SITE_CONFIG = {
     icpConfigs: [
       {
         domain: "pldduck.com", // 匹配主域名 (会自动匹配 www.pldduck.com 或 pldduck.com)
-        icp: "湘ICP备2025101669号",
+        icp: "湘ICP备2025101669号-3",
         icpUrl: "https://beian.miit.gov.cn"
       },
       {
-        domain: "duck.skin"
+        domain: "pldduck.top", // 匹配主域名 (会自动匹配 www.pldduck.com 或 pldduck.com)
+        icp: "湘ICP备2025101669号-2",
+        icpUrl: "https://beian.miit.gov.cn"
       }
     ]
   }
