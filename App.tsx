@@ -9,6 +9,7 @@ import { MeteorBackground } from './components/MeteorBackground';
 import { SITE_CONFIG } from './config';
 import { QQIcon, PixelDuckSvg } from './components/Icons';
 
+// --- 图标映射字典 ---
 const IconMap: Record<string, React.ReactNode> = {
   Server: <Server size={18} />,
   Globe: <Globe size={18} />,
@@ -18,8 +19,7 @@ const IconMap: Record<string, React.ReactNode> = {
   Zap: <Zap size={18} />,
 };
 
-// --- Sub-Components ---
-
+// --- 子组件：加载动画屏幕 ---
 const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [percent, setPercent] = useState(0);
 
@@ -45,16 +45,8 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
     >
       <div className="relative mb-12">
         <motion.div
-          animate={{ 
-            x: [-15, 15, -15],
-            rotate: [-8, 8, -8],
-            y: [0, -12, 0]
-          }}
-          transition={{ 
-            repeat: Infinity, 
-            duration: 0.35,
-            ease: "linear"
-          }}
+          animate={{ x: [-15, 15, -15], rotate: [-8, 8, -8], y: [0, -12, 0] }}
+          transition={{ repeat: Infinity, duration: 0.35, ease: "linear" }}
           className="w-24 h-24"
         >
           <PixelDuckSvg className="w-full h-full drop-shadow-[0_0_30px_rgba(252,211,77,0.6)]" />
@@ -95,6 +87,7 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   );
 };
 
+// --- 子组件：在底部漫步的鸭子 ---
 const RoamingDuck = () => {
   const controls = useAnimation();
   const [speech, setSpeech] = useState<string | null>(null);
@@ -153,6 +146,7 @@ const RoamingDuck = () => {
   );
 };
 
+// --- 子组件：卡片容器 ---
 const BentoCard = ({ children, className = "", href = "", onClick = undefined }: any) => {
   const Comp = href ? motion.a : motion.div;
   return (
@@ -170,16 +164,19 @@ const BentoCard = ({ children, className = "", href = "", onClick = undefined }:
   );
 };
 
+// --- 主应用组件 ---
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
 
+  // 复制文本提示
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setToast(`${label}已复制到剪贴板`);
     setTimeout(() => setToast(null), 2500);
   };
 
+  // 动画变量配置
   const stagger: Variants = {
     visible: { transition: { staggerChildren: 0.1 } }
   };
@@ -196,8 +193,22 @@ const App: React.FC = () => {
     }
   };
 
+  // --- 智能多域名备案号逻辑 ---
+  // 获取当前浏览器访问的域名（确保在浏览器环境中执行）
+  const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  
+  // 在配置列表中寻找是否包含当前域名（使用 includes 兼顾前缀如 www）
+  const matchedIcpConfig = SITE_CONFIG.footer.icpConfigs.find(config => 
+    currentHostname.includes(config.domain)
+  );
+
+  // 决定最终要展示的备案号和链接（匹配到了就用匹配的，没匹配到就用默认的）
+  const displayIcp = matchedIcpConfig ? matchedIcpConfig.icp : SITE_CONFIG.footer.defaultIcp;
+  const displayIcpUrl = matchedIcpConfig ? matchedIcpConfig.icpUrl : SITE_CONFIG.footer.defaultIcpUrl;
+
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-yellow-400 selection:text-black">
+      {/* 初始加载界面 */}
       <AnimatePresence mode="wait">
         {loading && <LoadingScreen key="loading" onComplete={() => setLoading(false)} />}
       </AnimatePresence>
@@ -211,7 +222,9 @@ const App: React.FC = () => {
             variants={stagger} initial="hidden" animate="visible"
             className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-32 space-y-12"
           >
+            {/* 顶部个人信息与域名卡片 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* 个人简介卡片 */}
               <motion.div variants={fadeInUp} className="md:col-span-2">
                 <BentoCard className="p-10 md:p-14 flex flex-col md:flex-row items-center gap-10">
                   <div className="relative group/avatar">
@@ -254,6 +267,7 @@ const App: React.FC = () => {
                 </BentoCard>
               </motion.div>
 
+              {/* 域名助记词卡片 */}
               <motion.div variants={fadeInUp}>
                 <BentoCard className="h-full p-10 flex flex-col justify-between" onClick={() => handleCopy(SITE_CONFIG.identity.domain, '站点域名')}>
                   <div className="flex justify-between items-start">
@@ -278,8 +292,9 @@ const App: React.FC = () => {
               </motion.div>
             </div>
 
+            {/* 社交媒体按钮栏 */}
             <motion.div variants={fadeInUp} className="flex flex-wrap justify-center md:justify-start gap-4">
-              <a href={SITE_CONFIG.socials.github} target="_blank" className="social-btn group">
+              <a href={SITE_CONFIG.socials.github} target="_blank" className="social-btn group" rel="noreferrer">
                 <Github size={18} className="group-hover:rotate-12 transition-transform"/>
                 <span>GitHub</span>
               </a>
@@ -293,7 +308,9 @@ const App: React.FC = () => {
               </a>
             </motion.div>
 
+            {/* 站点与项目列表 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8">
+              {/* 我的站点列表 */}
               <motion.section variants={fadeInUp} className="space-y-6">
                 <div className="flex items-center gap-4 px-4">
                   <div className="w-8 h-px bg-white/20" />
@@ -320,6 +337,7 @@ const App: React.FC = () => {
                 </div>
               </motion.section>
 
+              {/* 开源项目列表 */}
               <motion.section variants={fadeInUp} className="space-y-6">
                 <div className="flex items-center gap-4 px-4">
                   <div className="w-8 h-px bg-white/20" />
@@ -346,6 +364,7 @@ const App: React.FC = () => {
               </motion.section>
             </div>
 
+            {/* 页脚 */}
             <motion.footer variants={fadeInUp} className="pt-32 pb-16 flex flex-col items-center gap-8">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-px bg-gradient-to-r from-transparent to-white/10" />
@@ -353,16 +372,22 @@ const App: React.FC = () => {
                 <div className="w-12 h-px bg-gradient-to-l from-transparent to-white/10" />
               </div>
               <div className="text-center space-y-3">
-                <p className="text-[10px] font-mono font-medium tracking-[0.2em] text-white/20 uppercase">{SITE_CONFIG.footer.copyright}</p>
-                <a href={SITE_CONFIG.footer.icpUrl} target="_blank" className="text-[10px] font-mono text-white/10 hover:text-white/40 transition-colors block">
-                  {SITE_CONFIG.footer.icp}
-                </a>
+                <p className="text-[10px] font-mono font-medium tracking-[0.2em] text-white/20 uppercase">
+                  {SITE_CONFIG.footer.copyright}
+                </p>
+                {/* 智能渲染备案号：只有在 displayIcp 有值时才渲染 */}
+                {displayIcp && (
+                  <a href={displayIcpUrl} target="_blank" rel="noreferrer" className="text-[10px] font-mono text-white/10 hover:text-white/40 transition-colors block">
+                    {displayIcp}
+                  </a>
+                )}
               </div>
             </motion.footer>
           </motion.main>
         </>
       )}
 
+      {/* 提示吐司组件 */}
       <AnimatePresence>
         {toast && (
           <motion.div 
