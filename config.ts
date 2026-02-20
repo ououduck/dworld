@@ -98,8 +98,7 @@ export const SITE_CONFIG = {
         icpUrl: "https://beian.miit.gov.cn"
       },
       {
-        domain: "duck.skin",
-        icpUrl: "https://beian.miit.gov.cn"
+        domain: "duck.skin"
       }
     ]
   }
