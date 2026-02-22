@@ -78,6 +78,13 @@ export const SITE_CONFIG = {
       url: 'https://github.com/ououduck/dynamic-island-player', 
       icon: 'Disc', 
       tag: 'CSS+React' 
+    },
+    { 
+      title: 'D-pxxdns-index', 
+      desc: '为PXXDNS定制的企业级首页模板', 
+      url: 'https://github.com/ououduck/D-pxxdns-index/', 
+      icon: 'Code', 
+      tag: 'PHP' 
     }
   ],
 
@@ -98,7 +105,7 @@ export const SITE_CONFIG = {
         icpUrl: "https://beian.miit.gov.cn"
       },
       {
-        domain: "pldduck.top", // 匹配主域名 (会自动匹配 www.pldduck.com 或 pldduck.com)
+        domain: "pldduck.top", // 匹配主域名 (会自动匹配 www.pldduck.top 或 pldduck.top)
         icp: "湘ICP备2025101669号-2",
         icpUrl: "https://beian.miit.gov.cn"
       }
