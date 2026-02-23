@@ -83,7 +83,7 @@ export const SITE_CONFIG = {
       title: 'D-pxxdns-index', 
       desc: '为PXXDNS定制的企业级首页模板', 
       url: 'https://github.com/ououduck/D-pxxdns-index/', 
-      icon: 'Code', 
+      icon: 'Code2', 
       tag: 'PHP' 
     }
   ],
