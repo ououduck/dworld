@@ -85,6 +85,13 @@ export const SITE_CONFIG = {
       url: 'https://github.com/ououduck/D-pxxdns-index/', 
       icon: 'Code2', 
       tag: 'PHP' 
+    },
+    { 
+      title: 'D-blog', 
+      desc: '纯静态自研Blog', 
+      url: 'https://github.com/ououduck/D-blog/', 
+      icon: 'Code2', 
+      tag: 'React+Vite' 
     }
   ],
 
