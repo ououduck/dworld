@@ -9,7 +9,9 @@ import { MeteorBackground } from './components/MeteorBackground';
 import { SITE_CONFIG } from './config';
 import { QQIcon, PixelDuckSvg } from './components/Icons';
 
-// --- 图标映射字典 ---
+/**
+ * 将配置中的图标标识转换为实际图标节点，避免在配置文件里直接耦合 JSX。
+ */
 const IconMap: Record<string, React.ReactNode> = {
   Server: <Server size={18} />,
   Globe: <Globe size={18} />,
@@ -19,7 +21,9 @@ const IconMap: Record<string, React.ReactNode> = {
   Zap: <Zap size={18} />,
 };
 
-// --- 子组件：加载动画屏幕 ---
+/**
+ * 启动页通过短暂进度动画延后首屏内容出现，减少资源加载和动效初始化时的突兀感。
+ */
 const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [percent, setPercent] = useState(0);
 
@@ -87,7 +91,9 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   );
 };
 
-// --- 子组件：在底部漫步的鸭子 ---
+/**
+ * 底部漫游鸭子作为彩蛋角色持续往返移动，并在点击后提供轻量互动反馈。
+ */
 const RoamingDuck = () => {
   const controls = useAnimation();
   const [speech, setSpeech] = useState<string | null>(null);
@@ -146,7 +152,87 @@ const RoamingDuck = () => {
   );
 };
 
-// --- 子组件：卡片容器 ---
+const DEFAULT_BARRAGE_COLORS = ['#facc15', '#38bdf8', '#c084fc', '#34d399', '#fb7185', '#f97316', '#60a5fa', '#a3e635'];
+
+/**
+ * 彩色弹幕层以固定轨道持续横向滚动，配置缺省时自动回退，避免首屏出现空白或抖动。
+ */
+const ColorBarrage = () => {
+  const barrage = SITE_CONFIG.barrage;
+
+  const barrageTracks = React.useMemo(() => {
+    if (!barrage?.enabled || !barrage.items?.length) {
+      return [];
+    }
+
+    const laneCount = Math.max(1, barrage.rows || 1);
+    const minSpeed = barrage.speed?.min ?? 16;
+    const maxSpeed = Math.max(minSpeed, barrage.speed?.max ?? minSpeed);
+
+    return barrage.items.map((item, index) => {
+      const laneIndex = index % laneCount;
+      const duration = minSpeed + (index % Math.max(1, maxSpeed - minSpeed + 1));
+      const delay = -((index * 2.6) % duration);
+      const label = typeof item === 'string' ? item : item.text;
+      const color = typeof item === 'string'
+        ? DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length]
+        : item.color || DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length];
+
+      return {
+        id: `${label}-${index}`,
+        label,
+        color,
+        top: (barrage.topOffset ?? 96) + laneIndex * (barrage.rowGap ?? 52),
+        duration,
+        delay,
+        scale: 0.92 + (index % 4) * 0.04
+      };
+    });
+  }, [barrage]);
+
+  if (!barrage?.enabled || barrageTracks.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-[30] overflow-hidden pointer-events-none" aria-hidden="true">
+      {barrageTracks.map(track => (
+        <motion.div
+          key={track.id}
+          className="absolute left-0 whitespace-nowrap"
+          style={{ top: `${track.top}px` }}
+          initial={{ x: '105vw' }}
+          animate={{ x: '-140vw' }}
+          transition={{
+            duration: track.duration,
+            delay: track.delay,
+            ease: 'linear',
+            repeat: Infinity,
+            repeatType: 'loop'
+          }}
+        >
+          <span
+            className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold tracking-wide shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-md"
+            style={{
+              color: track.color,
+              borderColor: `${track.color}55`,
+              background: `linear-gradient(135deg, ${track.color}22, rgba(10, 10, 10, 0.82))`,
+              boxShadow: `0 10px 30px ${track.color}22`,
+              transform: `scale(${track.scale})`
+            }}
+          >
+            {track.label}
+          </span>
+        </motion.div>
+      ))}
+      <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#050505] via-[#050505]/70 to-transparent" />
+    </div>
+  );
+};
+
+/**
+ * 统一站内卡片的视觉风格，并根据是否传入链接自动切换为可跳转容器。
+ */
 const BentoCard = ({ children, className = "", href = "", onClick = undefined }: any) => {
   const Comp = href ? motion.a : motion.div;
   return (
@@ -164,19 +250,18 @@ const BentoCard = ({ children, className = "", href = "", onClick = undefined }:
   );
 };
 
-// --- 主应用组件 ---
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
 
-  // 复制文本提示
+  // 复制后立即给出统一提示，避免用户无法确认点击是否生效。
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setToast(`${label}已复制到剪贴板`);
     setTimeout(() => setToast(null), 2500);
   };
 
-  // 动画变量配置
+  // 通过容器级交错动画统一管理各区块的入场节奏，避免逐个元素手动配置。
   const stagger: Variants = {
     visible: { transition: { staggerChildren: 0.1 } }
   };
@@ -193,22 +278,18 @@ const App: React.FC = () => {
     }
   };
 
-  // --- 智能多域名备案号逻辑 ---
-  // 获取当前浏览器访问的域名（确保在浏览器环境中执行）
+  // 根据访问域名切换备案信息，兼容 `www` 等前缀场景；未匹配时回退到默认配置。
   const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
-  
-  // 在配置列表中寻找是否包含当前域名（使用 includes 兼顾前缀如 www）
   const matchedIcpConfig = SITE_CONFIG.footer.icpConfigs.find(config => 
     currentHostname.includes(config.domain)
   );
 
-  // 决定最终要展示的备案号和链接（匹配到了就用匹配的，没匹配到就用默认的）
   const displayIcp = matchedIcpConfig ? matchedIcpConfig.icp : SITE_CONFIG.footer.defaultIcp;
   const displayIcpUrl = matchedIcpConfig ? matchedIcpConfig.icpUrl : SITE_CONFIG.footer.defaultIcpUrl;
 
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-yellow-400 selection:text-black">
-      {/* 初始加载界面 */}
+      {/* 启动页先独占视图，避免首屏内容与入场动画同时出现造成视觉干扰。 */}
       <AnimatePresence mode="wait">
         {loading && <LoadingScreen key="loading" onComplete={() => setLoading(false)} />}
       </AnimatePresence>
@@ -216,19 +297,19 @@ const App: React.FC = () => {
       {!loading && (
         <>
           <MeteorBackground number={15} />
+          <ColorBarrage />
           <RoamingDuck />
           
           <motion.main 
             variants={stagger} initial="hidden" animate="visible"
             className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-32 space-y-12"
           >
-            {/* 顶部个人信息与域名卡片 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* 个人简介卡片 */}
               <motion.div variants={fadeInUp} className="md:col-span-2">
                 <BentoCard className="p-10 md:p-14 flex flex-col md:flex-row items-center gap-10">
                   <div className="relative group/avatar">
                     <div className="w-32 h-32 rounded-[2.5rem] border-2 border-white/10 overflow-hidden ring-8 ring-white/[0.02] transform transition-transform group-hover/avatar:scale-105 duration-500">
+                      {/* 外部头像源偶尔不稳定，这里回退到占位图以保证卡片始终完整。 */}
                       <img 
                         src={SITE_CONFIG.profile.logo} 
                         className="w-full h-full object-cover" 
@@ -267,7 +348,6 @@ const App: React.FC = () => {
                 </BentoCard>
               </motion.div>
 
-              {/* 域名助记词卡片 */}
               <motion.div variants={fadeInUp}>
                 <BentoCard className="h-full p-10 flex flex-col justify-between" onClick={() => handleCopy(SITE_CONFIG.identity.domain, '站点域名')}>
                   <div className="flex justify-between items-start">
@@ -292,7 +372,7 @@ const App: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* 社交媒体按钮栏 */}
+            {/* 联系方式保留一行横向排布，便于快速复制或跳转，不挤占首屏纵向空间。 */}
             <motion.div variants={fadeInUp} className="flex flex-wrap justify-center md:justify-start gap-4">
               <a href={SITE_CONFIG.socials.github} target="_blank" className="social-btn group" rel="noreferrer">
                 <Github size={18} className="group-hover:rotate-12 transition-transform"/>
@@ -308,9 +388,8 @@ const App: React.FC = () => {
               </a>
             </motion.div>
 
-            {/* 站点与项目列表 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8">
-              {/* 我的站点列表 */}
+              {/* 两列内容共享同一布局规则，新增站点或项目时能继续保持信息密度平衡。 */}
               <motion.section variants={fadeInUp} className="space-y-6">
                 <div className="flex items-center gap-4 px-4">
                   <div className="w-8 h-px bg-white/20" />
@@ -337,7 +416,6 @@ const App: React.FC = () => {
                 </div>
               </motion.section>
 
-              {/* 开源项目列表 */}
               <motion.section variants={fadeInUp} className="space-y-6">
                 <div className="flex items-center gap-4 px-4">
                   <div className="w-8 h-px bg-white/20" />
@@ -364,7 +442,7 @@ const App: React.FC = () => {
               </motion.section>
             </div>
 
-            {/* 页脚 */}
+            {/* 页脚保留极简视觉收尾，仅在存在备案信息时输出链接以兼顾不同部署域名。 */}
             <motion.footer variants={fadeInUp} className="pt-32 pb-16 flex flex-col items-center gap-8">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-px bg-gradient-to-r from-transparent to-white/10" />
@@ -375,7 +453,6 @@ const App: React.FC = () => {
                 <p className="text-[10px] font-mono font-medium tracking-[0.2em] text-white/20 uppercase">
                   {SITE_CONFIG.footer.copyright}
                 </p>
-                {/* 智能渲染备案号：只有在 displayIcp 有值时才渲染 */}
                 {displayIcp && (
                   <a href={displayIcpUrl} target="_blank" rel="noreferrer" className="text-[10px] font-mono text-white/10 hover:text-white/40 transition-colors block">
                     {displayIcp}
@@ -387,7 +464,7 @@ const App: React.FC = () => {
         </>
       )}
 
-      {/* 提示吐司组件 */}
+      {/* 吐司以非阻塞方式反馈复制结果，避免额外弹窗打断浏览。 */}
       <AnimatePresence>
         {toast && (
           <motion.div 
