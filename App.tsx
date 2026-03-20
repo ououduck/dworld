@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   Globe, ArrowUpRight, Github, Mail, Disc, 
   Activity, Check, Copy, Command, Server, 
@@ -21,6 +21,15 @@ const IconMap: Record<string, React.ReactNode> = {
   Zap: <Zap size={18} />,
 };
 
+const FALLBACK_ICON = <Command size={18} />;
+
+type BentoCardProps = {
+  children: React.ReactNode;
+  className?: string;
+  href?: string;
+  onClick?: React.MouseEventHandler<HTMLDivElement | HTMLAnchorElement>;
+};
+
 /**
  * 启动页通过短暂进度动画延后首屏内容出现，减少资源加载和动效初始化时的突兀感。
  */
@@ -28,17 +37,27 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [percent, setPercent] = useState(0);
 
   useEffect(() => {
+    let completeTimeout: ReturnType<typeof setTimeout> | null = null;
+
     const interval = setInterval(() => {
       setPercent(prev => {
         if (prev >= 100) {
           clearInterval(interval);
-          setTimeout(onComplete, 500);
+          if (!completeTimeout) {
+            completeTimeout = setTimeout(onComplete, 500);
+          }
           return 100;
         }
-        return prev + Math.floor(Math.random() * 10) + 5;
+        return Math.min(prev + Math.floor(Math.random() * 10) + 5, 100);
       });
     }, 100);
-    return () => clearInterval(interval);
+
+    return () => {
+      clearInterval(interval);
+      if (completeTimeout) {
+        clearTimeout(completeTimeout);
+      }
+    };
   }, [onComplete]);
 
   return (
@@ -98,34 +117,56 @@ const RoamingDuck = () => {
   const controls = useAnimation();
   const [speech, setSpeech] = useState<string | null>(null);
   const [direction, setDirection] = useState<'left' | 'right'>('right');
+  const speechTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    let isActive = true;
+
     const walk = async () => {
-      try {
-        while(true) {
-          setDirection('right');
-          await controls.start({ 
-            x: '80vw', 
-            rotate: [0, 5, 0, -5, 0],
-            transition: { duration: 12, ease: "linear" } 
-          });
-          setDirection('left');
-          await controls.start({ 
-            x: '5vw', 
-            rotate: [0, 5, 0, -5, 0],
-            transition: { duration: 12, ease: "linear" } 
-          });
+      while (isActive) {
+        setDirection('right');
+        await controls.start({
+          x: '80vw',
+          rotate: [0, 5, 0, -5, 0],
+          transition: { duration: 12, ease: 'linear' }
+        });
+
+        if (!isActive) {
+          break;
         }
-      } catch (e) {}
+
+        setDirection('left');
+        await controls.start({
+          x: '5vw',
+          rotate: [0, 5, 0, -5, 0],
+          transition: { duration: 12, ease: 'linear' }
+        });
+      }
     };
-    walk();
+
+    void walk();
+
+    return () => {
+      isActive = false;
+      controls.stop();
+      if (speechTimeoutRef.current) {
+        clearTimeout(speechTimeoutRef.current);
+      }
+    };
   }, [controls]);
 
   const handleClick = () => {
-    const phrases = ["嘎嘎！", "不准跑路！", "Quack!", "DWorld 永远的神", "你在看我吗？", "给点代码吃吃吧"];
+    const phrases = ['嘎嘎！', '不准跑路！', 'Quack!', 'DWorld 永远的神', '你在看我吗？', '给点代码吃吃吧'];
     setSpeech(phrases[Math.floor(Math.random() * phrases.length)]);
-    controls.start({ y: [0, -40, 0], transition: { duration: 0.4, ease: "backOut" } });
-    setTimeout(() => setSpeech(null), 2500);
+    controls.start({ y: [0, -40, 0], transition: { duration: 0.4, ease: 'backOut' } });
+
+    if (speechTimeoutRef.current) {
+      clearTimeout(speechTimeoutRef.current);
+    }
+
+    speechTimeoutRef.current = setTimeout(() => {
+      setSpeech(null);
+    }, 2500);
   };
 
   return (
@@ -233,12 +274,14 @@ const ColorBarrage = () => {
 /**
  * 统一站内卡片的视觉风格，并根据是否传入链接自动切换为可跳转容器。
  */
-const BentoCard = ({ children, className = "", href = "", onClick = undefined }: any) => {
+const BentoCard = ({ children, className = '', href, onClick }: BentoCardProps) => {
   const Comp = href ? motion.a : motion.div;
+
   return (
     <Comp
-      href={href || undefined}
-      target={href ? "_blank" : undefined}
+      href={href}
+      target={href ? '_blank' : undefined}
+      rel={href ? 'noopener noreferrer' : undefined}
       onClick={onClick}
       whileHover={{ y: -4, scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
@@ -253,12 +296,53 @@ const BentoCard = ({ children, className = "", href = "", onClick = undefined }:
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showToast = (message: string) => {
+    setToast(message);
+
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(null);
+    }, 2500);
+  };
 
   // 复制后立即给出统一提示，避免用户无法确认点击是否生效。
-  const handleCopy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setToast(`${label}已复制到剪贴板`);
-    setTimeout(() => setToast(null), 2500);
+  const handleCopy = async (text: string, label: string) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.setAttribute('readonly', 'true');
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        const copied = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        if (!copied) {
+          throw new Error('Fallback copy command failed');
+        }
+      }
+
+      showToast(`${label}已复制到剪贴板`);
+    } catch {
+      showToast(`${label}复制失败，请手动复制`);
+    }
   };
 
   // 通过容器级交错动画统一管理各区块的入场节奏，避免逐个元素手动配置。
@@ -280,8 +364,8 @@ const App: React.FC = () => {
 
   // 根据访问域名切换备案信息，兼容 `www` 等前缀场景；未匹配时回退到默认配置。
   const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
-  const matchedIcpConfig = SITE_CONFIG.footer.icpConfigs.find(config => 
-    currentHostname.includes(config.domain)
+  const matchedIcpConfig = SITE_CONFIG.footer.icpConfigs.find(config =>
+    currentHostname === config.domain || currentHostname.endsWith(`.${config.domain}`)
   );
 
   const displayIcp = matchedIcpConfig ? matchedIcpConfig.icp : SITE_CONFIG.footer.defaultIcp;
@@ -400,7 +484,7 @@ const App: React.FC = () => {
                     <BentoCard key={site.title} href={site.url} className="p-6 flex items-center justify-between group">
                       <div className="flex items-center gap-6">
                         <div className={`p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] transform transition-transform group-hover:scale-110 duration-500 ${site.color}`}>
-                          {IconMap[site.icon]}
+                          {IconMap[site.icon] ?? FALLBACK_ICON}
                         </div>
                         <div>
                           <div className="flex items-center gap-3">
@@ -426,7 +510,7 @@ const App: React.FC = () => {
                     <BentoCard key={proj.title} href={proj.url} className="p-6 flex items-center justify-between group">
                       <div className="flex items-center gap-6">
                         <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-purple-400 group-hover:text-purple-300 transition-colors">
-                          {IconMap[proj.icon]}
+                          {IconMap[proj.icon] ?? FALLBACK_ICON}
                         </div>
                         <div>
                           <h3 className="text-base font-bold text-white/90">{proj.title}</h3>

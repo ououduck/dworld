@@ -5,7 +5,7 @@ export const SITE_CONFIG = {
   // 个人名片区域使用的基础信息。
   profile: {
     name: "跑路的duck",
-    logo: "http://q1.qlogo.cn/g?b=qq&nk=2472652060&s=100",
+    logo: "https://q1.qlogo.cn/g?b=qq&nk=2472652060&s=100",
     description: "一只游手好闲的鸭子",
     tags: ["没实力", "爱跑路"],
     status: "online"
