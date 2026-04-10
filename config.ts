@@ -51,14 +51,6 @@ export const SITE_CONFIG = {
   // 站点列表驱动“我的站点”区域，后续扩展时只需追加数据即可复用现有卡片渲染。
   sites: [
     { 
-      title: 'D探针', 
-      en: 'Status', 
-      desc: '服务器实时监控', 
-      url: 'https://tanzhen.pldduck.com', 
-      icon: 'Server', 
-      color: "text-emerald-400" 
-    },
-    { 
       title: 'Ddomain', 
       en: 'DNS', 
       desc: '域名分发系统', 
