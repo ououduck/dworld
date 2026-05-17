@@ -51,28 +51,12 @@ export const SITE_CONFIG = {
   // 站点列表驱动“我的站点”区域，后续扩展时只需追加数据即可复用现有卡片渲染。
   sites: [
     { 
-      title: 'Ddomain', 
-      en: 'DNS', 
-      desc: '域名分发系统', 
-      url: 'https://dns.3pw.pw', 
-      icon: 'Globe', 
-      color: "text-blue-400" 
-    },
-    { 
       title: 'D-blog', 
       en: 'Blog', 
       desc: 'duck的胡言乱语', 
       url: 'https://blog.pldduck.com', 
       icon: 'Globe', 
       color: "text-blue-400" 
-    },
-    { 
-      title: 'D-pic', 
-      en: 'API', 
-      desc: '公益API', 
-      url: 'https://api.pldduck.com/', 
-      icon: 'Zap', 
-      color: "text-yellow-400" 
     }
   ],
 
