@@ -29,12 +29,12 @@ export const SITE_CONFIG = {
   // 彩色滑动弹幕通过配置驱动内容，便于按需调整文案、颜色和展示密度。
   barrage: {
     enabled: true,
-    topOffset: 96,
-    rowGap: 52,
-    rows: 3,
+    topOffset: 88,
+    rowGap: 48,
+    rows: 4,
     speed: {
-      min: 16,
-      max: 24
+      min: 18,
+      max: 28
     },
     items: [
       { text: "欢迎来到 D 的世界", color: "#facc15" },
@@ -44,7 +44,9 @@ export const SITE_CONFIG = {
       { text: "pldduck.top", color: "#fb7185" },
       { text: "AI就是我的命", color: "#f97316" },
       { text: "记得天天开心", color: "#60a5fa" },
-      { text: "Duck要跑路啦", color: "#a3e635" }
+      { text: "Duck要跑路啦", color: "#a3e635" },
+      { text: "欢迎来找鸭鸭玩", color: "#22d3ee" },
+      { text: "保持热爱，继续折腾", color: "#f472b6" }
     ]
   },
 

@@ -194,6 +194,7 @@ const RoamingDuck = () => {
 };
 
 const DEFAULT_BARRAGE_COLORS = ['#facc15', '#38bdf8', '#c084fc', '#34d399', '#fb7185', '#f97316', '#60a5fa', '#a3e635'];
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 /**
  * 彩色弹幕层以固定轨道持续横向滚动，配置缺省时自动回退，避免首屏出现空白或抖动。
@@ -206,14 +207,19 @@ const ColorBarrage = () => {
       return [];
     }
 
-    const laneCount = Math.max(1, barrage.rows || 1);
-    const minSpeed = barrage.speed?.min ?? 16;
-    const maxSpeed = Math.max(minSpeed, barrage.speed?.max ?? minSpeed);
+    const laneCount = clamp(Math.floor(barrage.rows || 1), 1, 6);
+    const topOffset = clamp(barrage.topOffset ?? 96, 56, 220);
+    const rowGap = clamp(barrage.rowGap ?? 52, 38, 72);
+    const minSpeed = clamp(barrage.speed?.min ?? 18, 12, 36);
+    const maxSpeed = clamp(Math.max(minSpeed, barrage.speed?.max ?? minSpeed), minSpeed, 42);
+    const speedRange = Math.max(1, maxSpeed - minSpeed);
+    const laneSpacing = Math.max(6, maxSpeed / Math.max(1, Math.ceil(barrage.items.length / laneCount)));
 
     return barrage.items.map((item, index) => {
-      const laneIndex = index % laneCount;
-      const duration = minSpeed + (index % Math.max(1, maxSpeed - minSpeed + 1));
-      const delay = -((index * 2.6) % duration);
+      const laneIndex = (index * 2 + Math.floor(index / laneCount)) % laneCount;
+      const duration = minSpeed + ((index * 3) % (speedRange + 1));
+      const laneOrder = Math.floor(index / laneCount);
+      const delay = -((laneOrder * laneSpacing + laneIndex * 1.4) % duration);
       const label = typeof item === 'string' ? item : item.text;
       const color = typeof item === 'string'
         ? DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length]
@@ -223,10 +229,10 @@ const ColorBarrage = () => {
         id: `${label}-${index}`,
         label,
         color,
-        top: (barrage.topOffset ?? 96) + laneIndex * (barrage.rowGap ?? 52),
+        top: topOffset + laneIndex * rowGap,
         duration,
         delay,
-        scale: 0.92 + (index % 4) * 0.04
+        scale: 0.94 + (index % 3) * 0.04
       };
     });
   }, [barrage]);
@@ -240,10 +246,10 @@ const ColorBarrage = () => {
       {barrageTracks.map(track => (
         <motion.div
           key={track.id}
-          className="absolute left-0 whitespace-nowrap"
+          className="absolute left-0 whitespace-nowrap will-change-transform"
           style={{ top: `${track.top}px` }}
-          initial={{ x: '105vw' }}
-          animate={{ x: '-140vw' }}
+          initial={{ x: '112vw' }}
+          animate={{ x: '-160vw' }}
           transition={{
             duration: track.duration,
             delay: track.delay,
@@ -253,7 +259,7 @@ const ColorBarrage = () => {
           }}
         >
           <span
-            className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold tracking-wide shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-md"
+            className="inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold tracking-wide shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-md sm:px-4 sm:py-2 sm:text-sm"
             style={{
               color: track.color,
               borderColor: `${track.color}55`,
@@ -266,7 +272,7 @@ const ColorBarrage = () => {
           </span>
         </motion.div>
       ))}
-      <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#050505] via-[#050505]/70 to-transparent" />
+      <div className="absolute inset-x-0 top-0 -z-10 h-36 bg-gradient-to-b from-[#050505] via-[#050505]/70 to-transparent" />
     </div>
   );
 };
