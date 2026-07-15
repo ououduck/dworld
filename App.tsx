@@ -176,9 +176,9 @@ const RoamingDuck = () => {
           {speech && (
             <motion.div 
               initial={{ opacity: 0, scale: 0.8, y: 10 }} 
-              animate={{ opacity: 1, scale: 1, y: -20 }} 
+              animate={{ opacity: 1, scale: 1, y: -8 }} 
               exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-xl px-4 py-1.5 rounded-2xl border border-white/20 text-xs font-medium whitespace-nowrap shadow-2xl"
+              className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-xl px-4 py-1.5 rounded-2xl border border-white/20 text-xs font-medium whitespace-nowrap shadow-2xl"
             >
               <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white/10" />
               {speech}
@@ -196,46 +196,109 @@ const RoamingDuck = () => {
 const DEFAULT_BARRAGE_COLORS = ['#facc15', '#38bdf8', '#c084fc', '#34d399', '#fb7185', '#f97316', '#60a5fa', '#a3e635'];
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
+const estimateBarrageWidth = (label: string, viewportWidth: number, scale: number) => {
+  const fontSize = viewportWidth < 640 ? 12 : 14;
+  const horizontalPadding = viewportWidth < 640 ? 24 : 32;
+  const textWidth = Array.from(label).reduce((width, character) => {
+    if (character === ' ') {
+      return width + 0.35;
+    }
+
+    return width + (/^[\u0000-\u00ff]$/.test(character) ? 0.56 : 1);
+  }, 0) * fontSize;
+
+  return (textWidth + horizontalPadding + 2) * scale;
+};
+
 /**
- * 彩色弹幕层以固定轨道持续横向滚动，配置缺省时自动回退，避免首屏出现空白或抖动。
+ * 彩色弹幕层以固定轨道持续横向滚动，并按文案宽度规划间距，避免同一轨道上的弹幕追赶重叠。
  */
 const ColorBarrage = () => {
   const barrage = SITE_CONFIG.barrage;
+  const [viewportWidth, setViewportWidth] = useState(() => (
+    typeof window === 'undefined' ? 1280 : Math.max(320, window.innerWidth)
+  ));
+
+  useEffect(() => {
+    const handleResize = () => setViewportWidth(Math.max(320, window.innerWidth));
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const barrageTracks = React.useMemo(() => {
     if (!barrage?.enabled || !barrage.items?.length) {
       return [];
     }
 
-    const laneCount = clamp(Math.floor(barrage.rows || 1), 1, 6);
+    const requestedLaneCount = clamp(Math.floor(barrage.rows || 1), 1, 6);
     const topOffset = clamp(barrage.topOffset ?? 96, 56, 220);
-    const rowGap = clamp(barrage.rowGap ?? 52, 38, 72);
-    const minSpeed = clamp(barrage.speed?.min ?? 18, 12, 36);
-    const maxSpeed = clamp(Math.max(minSpeed, barrage.speed?.max ?? minSpeed), minSpeed, 42);
-    const speedRange = Math.max(1, maxSpeed - minSpeed);
-    const laneSpacing = Math.max(6, maxSpeed / Math.max(1, Math.ceil(barrage.items.length / laneCount)));
+    const pillHeight = viewportWidth < 640 ? 30 : 36;
+    const rowGap = clamp(Math.max(barrage.rowGap ?? 52, pillHeight + 10), 38, 80);
+    const minDuration = clamp(barrage.speed?.min ?? 18, 12, 36);
+    const maxDuration = clamp(Math.max(minDuration, barrage.speed?.max ?? minDuration), minDuration, 42);
+    const travelDistance = viewportWidth * 2.72;
+    const horizontalGap = clamp(viewportWidth * 0.08, 48, 96);
+    const entries = barrage.items
+      .map((item, index) => {
+        const label = typeof item === 'string' ? item.trim() : item.text?.trim();
+        if (!label) {
+          return null;
+        }
 
-    return barrage.items.map((item, index) => {
-      const laneIndex = (index * 2 + Math.floor(index / laneCount)) % laneCount;
-      const duration = minSpeed + ((index * 3) % (speedRange + 1));
-      const laneOrder = Math.floor(index / laneCount);
-      const delay = -((laneOrder * laneSpacing + laneIndex * 1.4) % duration);
-      const label = typeof item === 'string' ? item : item.text;
-      const color = typeof item === 'string'
-        ? DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length]
-        : item.color || DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length];
+        const scale = 0.96 + (index % 3) * 0.03;
+        return {
+          index,
+          label,
+          color: typeof item === 'string'
+            ? DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length]
+            : item.color || DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length],
+          scale,
+          width: estimateBarrageWidth(label, viewportWidth, scale)
+        };
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
-      return {
-        id: `${label}-${index}`,
-        label,
-        color,
-        top: topOffset + laneIndex * rowGap,
-        duration,
-        delay,
-        scale: 0.94 + (index % 3) * 0.04
-      };
+    if (entries.length === 0) {
+      return [];
+    }
+
+    // 轨道总负载过高时自动增加轨道，优先保证同轨道弹幕有足够的横向空间。
+    const totalTrackWidth = entries.reduce((width, entry) => width + entry.width + horizontalGap, 0);
+    const laneCapacity = travelDistance * 0.78;
+    const laneCount = clamp(Math.max(requestedLaneCount, Math.ceil(totalTrackWidth / laneCapacity)), 1, 6);
+    const lanes = Array.from({ length: laneCount }, () => ({
+      load: 0,
+      entries: [] as typeof entries
+    }));
+
+    entries.forEach(entry => {
+      const lane = lanes.reduce((lightest, current) => current.load < lightest.load ? current : lightest, lanes[0]);
+      lane.entries.push(entry);
+      lane.load += entry.width + horizontalGap;
     });
-  }, [barrage]);
+
+    const durationRange = maxDuration - minDuration;
+    return lanes.flatMap((lane, laneIndex) => {
+      const duration = minDuration + (durationRange === 0 ? 0 : (laneIndex * 3) % (durationRange + 1));
+      let offset = 0;
+
+      return lane.entries.map(entry => {
+        const delay = -(offset / travelDistance) * duration;
+        offset += entry.width + horizontalGap;
+
+        return {
+          id: `${entry.label}-${entry.index}`,
+          label: entry.label,
+          color: entry.color,
+          top: topOffset + laneIndex * rowGap,
+          duration,
+          delay,
+          scale: entry.scale
+        };
+      });
+    });
+  }, [barrage, viewportWidth]);
 
   if (!barrage?.enabled || barrageTracks.length === 0) {
     return null;
