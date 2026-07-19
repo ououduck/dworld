@@ -23,7 +23,7 @@ export const SITE_CONFIG = {
   socials: {
     github: "https://github.com/ououduck",
     qq: "2472652060",
-    email: "duck@pldduck.com"
+    email: "i@pldduck.com"
   },
 
   // 彩色滑动弹幕通过配置驱动内容，便于按需调整文案、颜色和展示密度。
@@ -37,10 +37,9 @@ export const SITE_CONFIG = {
       max: 28
     },
     items: [
-      { text: "欢迎来到 D 的世界", color: "#facc15" },
+      { text: "欢迎来到 D的世界", color: "#facc15" },
       { text: "今天也要继续摸鱼写代码", color: "#38bdf8" },
       { text: "pldduck.com", color: "#c084fc" },
-      { text: "duck.skin", color: "#34d399" },
       { text: "pldduck.top", color: "#fb7185" },
       { text: "AI就是我的命", color: "#f97316" },
       { text: "记得天天开心", color: "#60a5fa" },
@@ -55,7 +54,7 @@ export const SITE_CONFIG = {
     { 
       title: 'D-blog', 
       en: 'Blog', 
-      desc: 'duck的胡言乱语', 
+      desc: '跑路的duck的技术分享和生活随笔', 
       url: 'https://blog.pldduck.com', 
       icon: 'Globe', 
       color: "text-blue-400" 
