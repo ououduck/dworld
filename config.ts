@@ -39,12 +39,12 @@ export const SITE_CONFIG = {
     items: [
       { text: "欢迎来到 D的世界", color: "#facc15" },
       { text: "今天也要继续摸鱼写代码", color: "#38bdf8" },
-      { text: "pldduck.com", color: "#c084fc" }
+      { text: "pldduck.com", color: "#c084fc" },
       { text: "pldduck.top", color: "#fb7185" },
       { text: "AI就是我的命", color: "#f97316" },
       { text: "记得天天开心", color: "#60a5fa" },
-      { text: "Duck要跑路啦", color: "#a3e635" }
-      { text: "保持热爱，继续折腾", color: "#f472b6" }
+      { text: "Duck要跑路啦", color: "#a3e635" },
+      { text: "保持热爱，继续折腾", color: "#f472b6" },
     ]
   },
 
