@@ -174,15 +174,17 @@ const RoamingDuck = () => {
       <div className="relative pointer-events-auto cursor-pointer" onClick={handleClick}>
         <AnimatePresence>
           {speech && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.8, y: 10 }} 
-              animate={{ opacity: 1, scale: 1, y: -8 }} 
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-xl px-4 py-1.5 rounded-2xl border border-white/20 text-xs font-medium whitespace-nowrap shadow-2xl"
-            >
-              <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white/10" />
-              {speech}
-            </motion.div>
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: -8 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="relative bg-white/10 backdrop-blur-xl px-4 py-1.5 rounded-2xl border border-white/20 text-xs font-medium whitespace-nowrap shadow-2xl"
+              >
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white/10" />
+                {speech}
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
         <div style={{ transform: direction === 'right' ? 'scaleX(-1)' : 'scaleX(1)' }}>

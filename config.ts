@@ -23,7 +23,7 @@ export const SITE_CONFIG = {
   socials: {
     github: "https://github.com/ououduck",
     qq: "2472652060",
-    email: "duck@pldduck.com"
+    email: "i@pldduck.com"
   },
 
   // 彩色滑动弹幕通过配置驱动内容，便于按需调整文案、颜色和展示密度。
@@ -39,69 +39,67 @@ export const SITE_CONFIG = {
     items: [
       { text: "欢迎来到 D 的世界", color: "#facc15" },
       { text: "今天也要继续摸鱼写代码", color: "#38bdf8" },
-      { text: "pldduck.com", color: "#c084fc" },
-      { text: "duck.skin", color: "#34d399" },
+      { text: "pldduck.com", color: "#c084fc" }
       { text: "pldduck.top", color: "#fb7185" },
       { text: "AI就是我的命", color: "#f97316" },
       { text: "记得天天开心", color: "#60a5fa" },
-      { text: "Duck要跑路啦", color: "#a3e635" },
-      { text: "欢迎来找鸭鸭玩", color: "#22d3ee" },
+      { text: "Duck要跑路啦", color: "#a3e635" }
       { text: "保持热爱，继续折腾", color: "#f472b6" }
     ]
   },
 
   // 站点列表驱动“我的站点”区域，后续扩展时只需追加数据即可复用现有卡片渲染。
   sites: [
-    { 
-      title: 'D-blog', 
-      en: 'Blog', 
-      desc: 'duck的胡言乱语', 
-      url: 'https://blog.pldduck.com', 
-      icon: 'Globe', 
-      color: "text-blue-400" 
+    {
+      title: 'D-blog',
+      en: 'Blog',
+      desc: '跑路的duck的技术分享和生活随笔',
+      url: 'https://blog.pldduck.com',
+      icon: 'Globe',
+      color: "text-blue-400"
     }
   ],
 
   // 开源项目使用与站点相同的数据驱动方式，便于保持两个列表的渲染逻辑一致。
   projects: [
-    { 
-      title: 'D-fuckshuiyin', 
-      desc: '智能图片去水印工具', 
-      url: 'https://github.com/ououduck/D-fuckshuiyin', 
-      icon: 'Code2', 
-      tag: 'JS+Canvas' 
+    {
+      title: 'D-fuckshuiyin',
+      desc: '智能图片去水印工具',
+      url: 'https://github.com/ououduck/D-fuckshuiyin',
+      icon: 'Code2',
+      tag: 'JS+Canvas'
     },
-    { 
-      title: 'Dynamic Island', 
-      desc: '灵动岛音乐播放组件', 
-      url: 'https://github.com/ououduck/dynamic-island-player', 
-      icon: 'Disc', 
-      tag: 'CSS+React' 
+    {
+      title: 'Dynamic Island',
+      desc: '灵动岛音乐播放组件',
+      url: 'https://github.com/ououduck/dynamic-island-player',
+      icon: 'Disc',
+      tag: 'CSS+React'
     },
-    { 
-      title: 'D-pxxdns-index', 
-      desc: '为PXXDNS定制的企业级首页模板', 
-      url: 'https://github.com/ououduck/D-pxxdns-index/', 
-      icon: 'Code2', 
-      tag: 'PHP' 
+    {
+      title: 'D-pxxdns-index',
+      desc: '为PXXDNS定制的企业级首页模板',
+      url: 'https://github.com/ououduck/D-pxxdns-index/',
+      icon: 'Code2',
+      tag: 'PHP'
     },
-    { 
-      title: 'D-blog', 
-      desc: '纯静态自研Blog', 
-      url: 'https://github.com/ououduck/D-blog/', 
-      icon: 'Code2', 
-      tag: 'React+Vite' 
+    {
+      title: 'D-blog',
+      desc: '纯静态自研Blog',
+      url: 'https://github.com/ououduck/D-blog/',
+      icon: 'Code2',
+      tag: 'React+Vite'
     }
   ],
 
   // 页脚备案配置按访问域名切换内容，兼顾主域名、备用域名和测试环境展示差异。
   footer: {
-    copyright: "© 2026 D工作室 & duck",
-    
+    copyright: "© 2026 PLDDUCK",
+
     // 未匹配域名时默认不展示备案号，避免海外或临时预览域名出现错误备案信息。
-    defaultIcp: null, 
+    defaultIcp: null,
     defaultIcpUrl: "https://beian.miit.gov.cn",
-    
+
     // 通过域名片段匹配对应备案号，可兼容 `www` 等常见前缀形式。
     icpConfigs: [
       {
