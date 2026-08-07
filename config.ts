@@ -37,7 +37,7 @@ export const SITE_CONFIG = {
       max: 28
     },
     items: [
-      { text: "欢迎来到 D 的世界", color: "#facc15" },
+      { text: "欢迎来到 D的世界", color: "#facc15" },
       { text: "今天也要继续摸鱼写代码", color: "#38bdf8" },
       { text: "pldduck.com", color: "#c084fc" }
       { text: "pldduck.top", color: "#fb7185" },
