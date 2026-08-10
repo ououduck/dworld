@@ -3,33 +3,44 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "description": "跑路的duck 的个人主页（D的世界）：深色玻璃拟态卡片 + 彩色弹幕 + 流星背景的单页应用。",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
+  "keywords": [
+    "homepage",
+    "personal-site",
+    "react",
+    "vite",
+    "tailwindcss",
+    "pldduck"
+  ],
+  "author": "跑路的duck",
+  "license": "ISC",
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "framer-motion": "^12.0.0",
     "lucide-react": "^0.460.0",
-    "framer-motion": "^12.0.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/node": "^26.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5.7.0",
     "vite": "^6.0.0"
   },
-  "description": "",
-  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ououduck/dworld.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/ououduck/dworld/issues"
   },

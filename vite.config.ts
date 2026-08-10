@@ -5,7 +5,7 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   // 使用相对资源路径，避免站点被部署到子目录时出现静态资源 404。
-  base: './', 
+  base: './',
   resolve: {
     alias: {
       // 与 TypeScript 路径别名保持一致，减少导入路径在开发和构建阶段的不一致。
@@ -21,5 +21,6 @@ export default defineConfig({
     outDir: 'dist',
     // 当前项目未依赖线上调试 sourcemap，关闭后可减少构建产物体积。
     sourcemap: false,
+    // 提示浏览器使用 Rollup 默认（esbuild）压缩即可，这里保持默认不额外配置。
   },
 });

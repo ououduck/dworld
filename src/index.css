@@ -1,0 +1,93 @@
+/* ============================================================
+ * DWorld 全局样式（Tailwind 构建期编译入口）
+ * - 通过 @tailwind 指令引入 base（preflight 重置）/ components / utilities
+ * - 站点自定义类集中在此维护，避免散落在 JSX 内联 <style> 中
+ * ============================================================ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- 基础 ---------- */
+
+html {
+  /* 声明深色原生控件配色，避免移动端表单 / 滚动条出现白闪 */
+  color-scheme: dark;
+}
+
+body {
+  background-color: #050505;
+  color: #ffffff;
+  /* 与 index.html 的字体异步加载策略配合：字体加载完成前回退到系统字体 */
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  /* 移动端点按反馈：去掉默认灰色高亮，避免与自定义 hover 效果叠加 */
+  -webkit-tap-highlight-color: transparent;
+  /* 阻止下拉刷新 / 回弹与页面滚动冲突（站点本身不滚动溢出） */
+  overscroll-behavior-y: none;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ---------- 固定背景噪点层 ---------- */
+
+.bg-noise {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* ---------- 社交按钮 ---------- */
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 28px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 仅在有 hover 能力的设备（非触摸屏）上应用悬停效果，避免移动端点击后样式“粘住” */
+@media (hover: hover) {
+  .social-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ---------- 减少动态效果 ---------- */
+
+/* 系统开启「减少动态效果」时，停用所有 CSS 动画与过渡；流星雨为纯装饰，直接隐藏 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-meteor {
+    display: none;
+  }
+}

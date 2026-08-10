@@ -1,13 +1,24 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { 
   Globe, ArrowUpRight, Github, Mail, Disc, 
   Activity, Check, Copy, Command, Server, 
   Code2, Zap 
 } from 'lucide-react';
-import { motion, AnimatePresence, useAnimation, Variants } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { MeteorBackground } from './components/MeteorBackground';
 import { SITE_CONFIG } from './config';
 import { QQIcon, PixelDuckSvg } from './components/Icons';
+
+/**
+ * 装饰组件（弹幕 / 漫游鸭子）拆包懒加载：
+ * 它们不属于首屏交互必需内容，拆成独立 chunk 后主包更小、解析更快；
+ * 加载屏播放期间足以完成这两个 chunk 的下载，用户无感知。
+ */
+const ColorBarrage = lazy(() => import('./components/ColorBarrage'));
+const RoamingDuck = lazy(() => import('./components/RoamingDuck'));
+
+// 加载屏“同会话跳过”标记的存储键：二次访问直接进首页，避免重复等待。
+const LOADING_SKIP_KEY = 'dworld-loading-skipped';
 
 /**
  * 将配置中的图标标识转换为实际图标节点，避免在配置文件里直接耦合 JSX。
@@ -31,26 +42,83 @@ type BentoCardProps = {
 };
 
 /**
- * 启动页通过短暂进度动画延后首屏内容出现，减少资源加载和动效初始化时的突兀感。
+ * 统一站内卡片的视觉风格，并根据是否传入链接自动切换为可跳转容器。
+ * 仅带 onClick 时（如域名复制卡）视为按钮：补充 role / tabIndex / 键盘触发，保证可访问性。
+ */
+const BentoCard = ({ children, className = '', href, onClick }: BentoCardProps) => {
+  const Comp = href ? motion.a : motion.div;
+  const interactive = Boolean(onClick) && !href;
+
+  const keyboardProps = interactive
+    ? {
+        role: 'button',
+        tabIndex: 0,
+        // 用 HTMLElement 级事件类型，保证同时兼容 motion.a / motion.div 两套 props。
+        onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onClick?.(event as unknown as React.MouseEvent<HTMLDivElement>);
+          }
+        },
+      }
+    : {};
+
+  return (
+    <Comp
+      href={href}
+      target={href ? '_blank' : undefined}
+      rel={href ? 'noopener noreferrer' : undefined}
+      onClick={onClick}
+      {...keyboardProps}
+      whileHover={{ y: -4, scale: 1.01 }}
+      whileTap={{ scale: 0.98 }}
+      className={`group relative bg-[#0A0A0A] border border-white/[0.06] rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-white/[0.15] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] ${className}`}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      {children}
+    </Comp>
+  );
+};
+
+/**
+ * 启动页：短暂进度动画延后首屏内容出现，减少资源加载与动效初始化时的突兀感。
+ * - 同一会话内二次访问直接跳过（sessionStorage 标记）；
+ * - 系统开启「减少动态效果」时不做逐帧进度，直接加速完成。
  */
 const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [percent, setPercent] = useState(0);
+  const [reducedMotion] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 
   useEffect(() => {
+    // 同一会话二次访问：直接跳过加载屏，保留首访的仪式感。
+    try {
+      if (sessionStorage.getItem(LOADING_SKIP_KEY)) {
+        onComplete();
+        return;
+      }
+    } catch {
+      // sessionStorage 不可用（如隐私模式）时忽略，按正常流程播放。
+    }
+
     let completeTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    // 开启减少动态效果时用大步长快速完成，避免无意义的花式动画。
+    const step = reducedMotion ? 33 : () => Math.floor(Math.random() * 10) + 5;
 
     const interval = setInterval(() => {
       setPercent(prev => {
         if (prev >= 100) {
           clearInterval(interval);
           if (!completeTimeout) {
-            completeTimeout = setTimeout(onComplete, 500);
+            completeTimeout = setTimeout(onComplete, reducedMotion ? 60 : 300);
           }
           return 100;
         }
-        return Math.min(prev + Math.floor(Math.random() * 10) + 5, 100);
+        return Math.min(prev + (typeof step === 'number' ? step : step()), 100);
       });
-    }, 100);
+    }, reducedMotion ? 20 : 60);
 
     return () => {
       clearInterval(interval);
@@ -58,28 +126,37 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
         clearTimeout(completeTimeout);
       }
     };
-  }, [onComplete]);
+  }, [onComplete, reducedMotion]);
 
   return (
     <motion.div
       className="fixed inset-0 z-[100] bg-[#050505] flex flex-col items-center justify-center overflow-hidden"
       exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
-      transition={{ duration: 0.8, ease: "circOut" }}
+      transition={{ duration: reducedMotion ? 0.15 : 0.8, ease: "circOut" }}
     >
       <div className="relative mb-12">
-        <motion.div
-          animate={{ x: [-15, 15, -15], rotate: [-8, 8, -8], y: [0, -12, 0] }}
-          transition={{ repeat: Infinity, duration: 0.35, ease: "linear" }}
-          className="w-24 h-24"
-        >
-          <PixelDuckSvg className="w-full h-full drop-shadow-[0_0_30px_rgba(252,211,77,0.6)]" />
-        </motion.div>
-        
-        <motion.div 
-          animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5], x: [20, 40, 60] }}
-          transition={{ repeat: Infinity, duration: 0.35 }}
-          className="absolute -bottom-2 -left-4 w-4 h-2 bg-white/20 rounded-full blur-sm"
-        />
+        {!reducedMotion && (
+          <motion.div
+            animate={{ x: [-15, 15, -15], rotate: [-8, 8, -8], y: [0, -12, 0] }}
+            transition={{ repeat: Infinity, duration: 0.35, ease: "linear" }}
+            className="w-24 h-24"
+          >
+            <PixelDuckSvg className="w-full h-full drop-shadow-[0_0_30px_rgba(252,211,77,0.6)]" />
+          </motion.div>
+        )}
+        {reducedMotion && (
+          <div className="w-24 h-24">
+            <PixelDuckSvg className="w-full h-full drop-shadow-[0_0_30px_rgba(252,211,77,0.6)]" />
+          </div>
+        )}
+
+        {!reducedMotion && (
+          <motion.div 
+            animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5], x: [20, 40, 60] }}
+            transition={{ repeat: Infinity, duration: 0.35 }}
+            className="absolute -bottom-2 -left-4 w-4 h-2 bg-white/20 rounded-full blur-sm"
+          />
+        )}
       </div>
 
       <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mb-4">
@@ -110,264 +187,12 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   );
 };
 
-/**
- * 底部漫游鸭子作为彩蛋角色持续往返移动，并在点击后提供轻量互动反馈。
- */
-const RoamingDuck = () => {
-  const controls = useAnimation();
-  const [speech, setSpeech] = useState<string | null>(null);
-  const [direction, setDirection] = useState<'left' | 'right'>('right');
-  const speechTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    let isActive = true;
-
-    const walk = async () => {
-      while (isActive) {
-        setDirection('right');
-        await controls.start({
-          x: '80vw',
-          rotate: [0, 5, 0, -5, 0],
-          transition: { duration: 12, ease: 'linear' }
-        });
-
-        if (!isActive) {
-          break;
-        }
-
-        setDirection('left');
-        await controls.start({
-          x: '5vw',
-          rotate: [0, 5, 0, -5, 0],
-          transition: { duration: 12, ease: 'linear' }
-        });
-      }
-    };
-
-    void walk();
-
-    return () => {
-      isActive = false;
-      controls.stop();
-      if (speechTimeoutRef.current) {
-        clearTimeout(speechTimeoutRef.current);
-      }
-    };
-  }, [controls]);
-
-  const handleClick = () => {
-    const phrases = ['嘎嘎！', '不准跑路！', 'Quack!', 'DWorld 永远的神', '你在看我吗？', '给点代码吃吃吧'];
-    setSpeech(phrases[Math.floor(Math.random() * phrases.length)]);
-    controls.start({ y: [0, -40, 0], transition: { duration: 0.4, ease: 'backOut' } });
-
-    if (speechTimeoutRef.current) {
-      clearTimeout(speechTimeoutRef.current);
-    }
-
-    speechTimeoutRef.current = setTimeout(() => {
-      setSpeech(null);
-    }, 2500);
-  };
-
-  return (
-    <motion.div animate={controls} className="fixed bottom-4 left-0 z-[40] pointer-events-none">
-      <div className="relative pointer-events-auto cursor-pointer" onClick={handleClick}>
-        <AnimatePresence>
-          {speech && (
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: -8 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="relative bg-white/10 backdrop-blur-xl px-4 py-1.5 rounded-2xl border border-white/20 text-xs font-medium whitespace-nowrap shadow-2xl"
-              >
-                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white/10" />
-                {speech}
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-        <div style={{ transform: direction === 'right' ? 'scaleX(-1)' : 'scaleX(1)' }}>
-          <PixelDuckSvg className="w-16 h-16 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]" />
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-const DEFAULT_BARRAGE_COLORS = ['#facc15', '#38bdf8', '#c084fc', '#34d399', '#fb7185', '#f97316', '#60a5fa', '#a3e635'];
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
-
-const estimateBarrageWidth = (label: string, viewportWidth: number, scale: number) => {
-  const fontSize = viewportWidth < 640 ? 12 : 14;
-  const horizontalPadding = viewportWidth < 640 ? 24 : 32;
-  const textWidth = Array.from(label).reduce((width, character) => {
-    if (character === ' ') {
-      return width + 0.35;
-    }
-
-    return width + (/^[\u0000-\u00ff]$/.test(character) ? 0.56 : 1);
-  }, 0) * fontSize;
-
-  return (textWidth + horizontalPadding + 2) * scale;
-};
-
-/**
- * 彩色弹幕层以固定轨道持续横向滚动，并按文案宽度规划间距，避免同一轨道上的弹幕追赶重叠。
- */
-const ColorBarrage = () => {
-  const barrage = SITE_CONFIG.barrage;
-  const [viewportWidth, setViewportWidth] = useState(() => (
-    typeof window === 'undefined' ? 1280 : Math.max(320, window.innerWidth)
-  ));
-
-  useEffect(() => {
-    const handleResize = () => setViewportWidth(Math.max(320, window.innerWidth));
-    window.addEventListener('resize', handleResize);
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const barrageTracks = React.useMemo(() => {
-    if (!barrage?.enabled || !barrage.items?.length) {
-      return [];
-    }
-
-    const requestedLaneCount = clamp(Math.floor(barrage.rows || 1), 1, 6);
-    const topOffset = clamp(barrage.topOffset ?? 96, 56, 220);
-    const pillHeight = viewportWidth < 640 ? 30 : 36;
-    const rowGap = clamp(Math.max(barrage.rowGap ?? 52, pillHeight + 10), 38, 80);
-    const minDuration = clamp(barrage.speed?.min ?? 18, 12, 36);
-    const maxDuration = clamp(Math.max(minDuration, barrage.speed?.max ?? minDuration), minDuration, 42);
-    const travelDistance = viewportWidth * 2.72;
-    const horizontalGap = clamp(viewportWidth * 0.08, 48, 96);
-    const entries = barrage.items
-      .map((item, index) => {
-        const label = typeof item === 'string' ? item.trim() : item.text?.trim();
-        if (!label) {
-          return null;
-        }
-
-        const scale = 0.96 + (index % 3) * 0.03;
-        return {
-          index,
-          label,
-          color: typeof item === 'string'
-            ? DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length]
-            : item.color || DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length],
-          scale,
-          width: estimateBarrageWidth(label, viewportWidth, scale)
-        };
-      })
-      .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
-
-    if (entries.length === 0) {
-      return [];
-    }
-
-    // 轨道总负载过高时自动增加轨道，优先保证同轨道弹幕有足够的横向空间。
-    const totalTrackWidth = entries.reduce((width, entry) => width + entry.width + horizontalGap, 0);
-    const laneCapacity = travelDistance * 0.78;
-    const laneCount = clamp(Math.max(requestedLaneCount, Math.ceil(totalTrackWidth / laneCapacity)), 1, 6);
-    const lanes = Array.from({ length: laneCount }, () => ({
-      load: 0,
-      entries: [] as typeof entries
-    }));
-
-    entries.forEach(entry => {
-      const lane = lanes.reduce((lightest, current) => current.load < lightest.load ? current : lightest, lanes[0]);
-      lane.entries.push(entry);
-      lane.load += entry.width + horizontalGap;
-    });
-
-    const durationRange = maxDuration - minDuration;
-    return lanes.flatMap((lane, laneIndex) => {
-      const duration = minDuration + (durationRange === 0 ? 0 : (laneIndex * 3) % (durationRange + 1));
-      let offset = 0;
-
-      return lane.entries.map(entry => {
-        const delay = -(offset / travelDistance) * duration;
-        offset += entry.width + horizontalGap;
-
-        return {
-          id: `${entry.label}-${entry.index}`,
-          label: entry.label,
-          color: entry.color,
-          top: topOffset + laneIndex * rowGap,
-          duration,
-          delay,
-          scale: entry.scale
-        };
-      });
-    });
-  }, [barrage, viewportWidth]);
-
-  if (!barrage?.enabled || barrageTracks.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="fixed inset-0 z-[30] overflow-hidden pointer-events-none" aria-hidden="true">
-      {barrageTracks.map(track => (
-        <motion.div
-          key={track.id}
-          className="absolute left-0 whitespace-nowrap will-change-transform"
-          style={{ top: `${track.top}px` }}
-          initial={{ x: '112vw' }}
-          animate={{ x: '-160vw' }}
-          transition={{
-            duration: track.duration,
-            delay: track.delay,
-            ease: 'linear',
-            repeat: Infinity,
-            repeatType: 'loop'
-          }}
-        >
-          <span
-            className="inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold tracking-wide shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-md sm:px-4 sm:py-2 sm:text-sm"
-            style={{
-              color: track.color,
-              borderColor: `${track.color}55`,
-              background: `linear-gradient(135deg, ${track.color}22, rgba(10, 10, 10, 0.82))`,
-              boxShadow: `0 10px 30px ${track.color}22`,
-              transform: `scale(${track.scale})`
-            }}
-          >
-            {track.label}
-          </span>
-        </motion.div>
-      ))}
-      <div className="absolute inset-x-0 top-0 -z-10 h-36 bg-gradient-to-b from-[#050505] via-[#050505]/70 to-transparent" />
-    </div>
-  );
-};
-
-/**
- * 统一站内卡片的视觉风格，并根据是否传入链接自动切换为可跳转容器。
- */
-const BentoCard = ({ children, className = '', href, onClick }: BentoCardProps) => {
-  const Comp = href ? motion.a : motion.div;
-
-  return (
-    <Comp
-      href={href}
-      target={href ? '_blank' : undefined}
-      rel={href ? 'noopener noreferrer' : undefined}
-      onClick={onClick}
-      whileHover={{ y: -4, scale: 1.01 }}
-      whileTap={{ scale: 0.98 }}
-      className={`group relative bg-[#0A0A0A] border border-white/[0.06] rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-white/[0.15] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] ${className}`}
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-      {children}
-    </Comp>
-  );
-};
-
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 头像回退标记：外部头像源失败时回退到占位图，且只回退一次，避免 onError 循环。
+  const avatarFallbackUsed = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -395,6 +220,7 @@ const App: React.FC = () => {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
       } else {
+        // 非安全上下文等场景下 clipboard API 不可用，回退到隐藏 textarea + execCommand。
         const textArea = document.createElement('textarea');
         textArea.value = text;
         textArea.setAttribute('readonly', 'true');
@@ -442,18 +268,32 @@ const App: React.FC = () => {
   const displayIcp = matchedIcpConfig ? matchedIcpConfig.icp : SITE_CONFIG.footer.defaultIcp;
   const displayIcpUrl = matchedIcpConfig ? matchedIcpConfig.icpUrl : SITE_CONFIG.footer.defaultIcpUrl;
 
+  const handleLoadingComplete = useCallback(() => {
+    setLoading(false);
+    // 首次加载完成后打标记，同一会话后续访问直接跳过加载屏。
+    try {
+      sessionStorage.setItem(LOADING_SKIP_KEY, '1');
+    } catch {
+      // sessionStorage 不可用时忽略，不影响功能。
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-yellow-400 selection:text-black">
       {/* 启动页先独占视图，避免首屏内容与入场动画同时出现造成视觉干扰。 */}
       <AnimatePresence mode="wait">
-        {loading && <LoadingScreen key="loading" onComplete={() => setLoading(false)} />}
+        {loading && <LoadingScreen key="loading" onComplete={handleLoadingComplete} />}
       </AnimatePresence>
 
       {!loading && (
         <>
           <MeteorBackground number={15} />
-          <ColorBarrage />
-          <RoamingDuck />
+          <Suspense fallback={null}>
+            <ColorBarrage />
+          </Suspense>
+          <Suspense fallback={null}>
+            <RoamingDuck />
+          </Suspense>
           
           <motion.main 
             variants={stagger} initial="hidden" animate="visible"
@@ -464,13 +304,19 @@ const App: React.FC = () => {
                 <BentoCard className="p-10 md:p-14 flex flex-col md:flex-row items-center gap-10">
                   <div className="relative group/avatar">
                     <div className="w-32 h-32 rounded-[2.5rem] border-2 border-white/10 overflow-hidden ring-8 ring-white/[0.02] transform transition-transform group-hover/avatar:scale-105 duration-500">
-                      {/* 外部头像源偶尔不稳定，这里回退到占位图以保证卡片始终完整。 */}
+                      {/* 外部头像源偶尔不稳定，这里回退到占位图以保证卡片始终完整；只回退一次防止 onError 循环。
+                          首屏关键图保持默认 eager 加载，仅开启异步解码避免阻塞渲染。 */}
                       <img 
                         src={SITE_CONFIG.profile.logo} 
                         className="w-full h-full object-cover" 
-                        alt="Profile" 
+                        alt="跑路的duck 头像" 
+                        decoding="async"
                         onError={(e) => {
-                           (e.target as HTMLImageElement).src = "https://ui-avatars.com/api/?name=Duck&background=FCD34D&color=000";
+                          if (avatarFallbackUsed.current) {
+                            return;
+                          }
+                          avatarFallbackUsed.current = true;
+                          (e.target as HTMLImageElement).src = "https://ui-avatars.com/api/?name=Duck&background=FCD34D&color=000";
                         }}
                       />
                     </div>
@@ -633,30 +479,6 @@ const App: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <style>{`
-        .social-btn {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          height: 56px;
-          padding: 0 28px;
-          border-radius: 20px;
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(255,255,255,0.05);
-          font-size: 14px;
-          font-weight: 600;
-          color: rgba(255,255,255,0.5);
-          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .social-btn:hover {
-          background: rgba(255,255,255,0.06);
-          border-color: rgba(255,255,255,0.15);
-          color: #fff;
-          transform: translateY(-4px);
-          box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5);
-        }
-      `}</style>
     </div>
   );
 };

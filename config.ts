@@ -1,4 +1,24 @@
 /**
+ * 弹幕条目：既支持「纯文案字符串」（使用内置默认色板），
+ * 也支持「文案 + 自定义颜色」的对象形式。
+ */
+export type BarrageItem = string | { text: string; color?: string };
+
+/**
+ * 彩色弹幕文案集合。显式声明联合类型，让弹幕组件能按字符串 / 对象两种形式分别处理。
+ */
+const barrageItems: BarrageItem[] = [
+  { text: "欢迎来到 D的世界", color: "#facc15" },
+  { text: "今天也要继续摸鱼写代码", color: "#38bdf8" },
+  { text: "pldduck.com", color: "#c084fc" },
+  { text: "pldduck.top", color: "#fb7185" },
+  { text: "AI就是我的命", color: "#f97316" },
+  { text: "记得天天开心", color: "#60a5fa" },
+  { text: "Duck要跑路啦", color: "#a3e635" },
+  { text: "保持热爱，继续折腾", color: "#f472b6" },
+];
+
+/**
  * 集中维护首页展示所需的站点数据，便于在不改动页面结构的前提下调整内容。
  */
 export const SITE_CONFIG = {
@@ -36,16 +56,7 @@ export const SITE_CONFIG = {
       min: 18,
       max: 28
     },
-    items: [
-      { text: "欢迎来到 D的世界", color: "#facc15" },
-      { text: "今天也要继续摸鱼写代码", color: "#38bdf8" },
-      { text: "pldduck.com", color: "#c084fc" },
-      { text: "pldduck.top", color: "#fb7185" },
-      { text: "AI就是我的命", color: "#f97316" },
-      { text: "记得天天开心", color: "#60a5fa" },
-      { text: "Duck要跑路啦", color: "#a3e635" },
-      { text: "保持热爱，继续折腾", color: "#f472b6" },
-    ]
+    items: barrageItems,
   },
 
   // 站点列表驱动“我的站点”区域，后续扩展时只需追加数据即可复用现有卡片渲染。

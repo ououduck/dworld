@@ -1,0 +1,5 @@
+# DWorld 爬虫规则：允许所有搜索引擎抓取，并指向站点地图。
+User-agent: *
+Allow: /
+
+Sitemap: https://www.pldduck.com/sitemap.xml
