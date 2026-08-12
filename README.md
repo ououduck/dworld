@@ -1,4 +1,4 @@
-# DWorld · D 的世界 🦆
+# DWorld · D 的世界
 
 跑路的duck 的个人主页：深色玻璃拟态卡片 + 彩色弹幕 + 流星背景的单页应用。
 
@@ -59,4 +59,4 @@ npm run preview  # 本地预览构建产物
 
 ## License
 
-ISC
+MIT
