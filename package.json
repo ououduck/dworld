@@ -4,11 +4,16 @@
   "version": "1.0.0",
   "type": "module",
   "description": "跑路的duck 的个人主页（D的世界）：深色玻璃拟态卡片 + 彩色弹幕 + 流星背景的单页应用。",
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck"
   },
   "keywords": [
     "homepage",

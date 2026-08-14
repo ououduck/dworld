@@ -1,0 +1,130 @@
+# PagesCMS 配置 — Dworld（D 的世界）内容管理
+# 文档: https://pagescms.org/docs/configuration/
+content:
+  # ── 站点配置（单文件：config/site.config.json，CMS 中直接编辑，保存即推送生效）──
+  # 包含：个人名片、域名记忆卡、社交链接、弹幕、跳转卡片（我的站点 / 开源项目）、页脚备案。
+  - name: siteConfig
+    label: 站点配置
+    type: file
+    path: config/site.config.json
+    format: json
+    fields:
+      - name: profile
+        label: 个人名片
+        type: object
+        fields:
+          - { name: name, label: 昵称, type: string, required: true }
+          - { name: logo, label: 头像链接, type: string, required: true }
+          - { name: description, label: 一句话简介, type: string }
+          - { name: tags, label: 标签, type: string, list: true }
+          - name: status
+            label: 在线状态（online 显示绿点）
+            type: select
+            options:
+              values: ["online", "offline"]
+
+      - name: identity
+        label: 站点信息 · 域名记忆卡片
+        type: object
+        fields:
+          - { name: label, label: 助记词标签, type: string }
+          - { name: domain, label: 主域名（点击复制）, type: string, required: true }
+          - { name: memorySentence, label: 助记引导语, type: string }
+          - { name: memoryDetail, label: 助记内容, type: string }
+
+      - name: socials
+        label: 站点信息 · 社交链接
+        type: object
+        fields:
+          - { name: github, label: GitHub 主页, type: string }
+          - { name: qq, label: QQ 号（点击复制）, type: string }
+          - { name: email, label: 邮箱, type: string }
+
+      - name: barrage
+        label: 彩色弹幕
+        type: object
+        fields:
+          - { name: enabled, label: 启用弹幕, type: boolean }
+          - { name: topOffset, label: 顶部偏移（px）, type: number }
+          - { name: rowGap, label: 行间距（px）, type: number }
+          - { name: rows, label: 行数, type: number }
+          - name: speed
+            label: 速度范围（秒）
+            type: object
+            fields:
+              - { name: min, label: 最小秒数, type: number }
+              - { name: max, label: 最大秒数, type: number }
+          - name: items
+            label: 弹幕文案
+            type: list
+            item:
+              type: object
+              fields:
+                - { name: text, label: 文案, type: string, required: true }
+                - { name: color, label: 颜色（可选，留空自动分配）, type: string }
+
+      - name: sites
+        label: 跳转卡片 · 我的站点
+        type: list
+        item:
+          type: object
+          fields:
+            - { name: title, label: 名称, type: string, required: true }
+            - { name: en, label: 英文角标, type: string }
+            - { name: desc, label: 简介, type: string }
+            - { name: url, label: 跳转链接, type: string, required: true }
+            - name: icon
+              label: 图标
+              type: select
+              options:
+                values: ["Globe", "Code2", "Disc", "Server", "Activity", "Zap"]
+            - name: color
+              label: 图标颜色
+              type: select
+              options:
+                values: ["text-blue-400", "text-purple-400", "text-green-400", "text-yellow-400", "text-pink-400", "text-cyan-400"]
+
+      - name: projects
+        label: 跳转卡片 · 开源项目
+        type: list
+        item:
+          type: object
+          fields:
+            - { name: title, label: 项目名称, type: string, required: true }
+            - { name: desc, label: 项目简介, type: string }
+            - { name: url, label: 仓库链接, type: string, required: true }
+            - name: icon
+              label: 图标
+              type: select
+              options:
+                values: ["Globe", "Code2", "Disc", "Server", "Activity", "Zap"]
+            - { name: tag, label: 技术标签, type: string }
+
+      - name: footer
+        label: 页脚 / 备案
+        type: object
+        fields:
+          - { name: copyright, label: 版权文字, type: string }
+          - { name: defaultIcp, label: 默认备案号（留空则不展示）, type: string }
+          - { name: defaultIcpUrl, label: 默认备案链接, type: string }
+          - name: icpConfigs
+            label: 按域名匹配的备案配置
+            type: list
+            item:
+              type: object
+              fields:
+                - { name: domain, label: 匹配域名, type: string }
+                - { name: icp, label: 备案号, type: string }
+                - { name: icpUrl, label: 备案链接, type: string }
+
+# ── 部署动作：CMS 侧边栏按钮，触发 .github/workflows/deploy.yml ──
+# 文档: https://pagescms.org/docs/configuration/actions/
+actions:
+  - name: deploy-site
+    label: 🚀 部署到 Cloudflare & EdgeOne
+    workflow: deploy.yml
+    ref: current
+    confirm:
+      title: 确认部署？
+      message: 将在 GitHub Actions 中构建站点，并直传部署到 Cloudflare Pages 与 EdgeOne Pages
+      button: 开始部署
