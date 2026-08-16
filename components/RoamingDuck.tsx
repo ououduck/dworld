@@ -1,6 +1,7 @@
 import React from 'react';
 import { AnimatePresence, motion, useAnimation } from 'framer-motion';
 import { PixelDuckSvg } from './Icons';
+import { useMediaQuery } from '../src/hooks/useMediaQuery';
 
 /**
  * 底部漫游鸭子：彩蛋角色在页面底部持续左右往返移动，点击后弹出随机吐槽气泡。
@@ -13,17 +14,13 @@ const RoamingDuck = () => {
   const [speech, setSpeech] = React.useState<string | null>(null);
   const [direction, setDirection] = React.useState<'left' | 'right'>('right');
   const speechTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  // 通过 matchMedia 判断交互环境：
+  // 实时监听交互环境（与全站其它组件共用 useMediaQuery，偏好中途变化会即时响应）：
   // - hover: hover —— 桌面指针设备才有「持续漫游」的视觉预期；
   // - prefers-reduced-motion: reduce —— 用户开启减少动态效果时停止漫游动画。
   // 两种情况都让鸭子保持静止，仅保留点击气泡反馈。
-  const canRoam = React.useMemo(
-    () =>
-      typeof window !== 'undefined' &&
-      window.matchMedia('(hover: hover)').matches &&
-      !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    [],
-  );
+  const hasHover = useMediaQuery('(hover: hover)');
+  const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const canRoam = hasHover && !prefersReducedMotion;
 
   React.useEffect(() => {
     if (!canRoam) {
@@ -32,25 +29,31 @@ const RoamingDuck = () => {
 
     let isActive = true;
 
-    const walk = async () => {
-      while (isActive) {
-        setDirection('right');
+    // 动画可能被 stop（卸载 / 偏好变化）打断：framer-motion 的 finished promise 会 reject，
+    // 这里统一吞掉避免 unhandled rejection；isActive 守卫保证循环不再继续启动动画。
+    const startWalk = async (x: string) => {
+      try {
         await controls.start({
-          x: '80vw',
+          x,
           rotate: [0, 5, 0, -5, 0],
           transition: { duration: 12, ease: 'linear' },
         });
+      } catch {
+        // 被打断时静默退出，交由 isActive 判断是否终止循环。
+      }
+    };
+
+    const walk = async () => {
+      while (isActive) {
+        setDirection('right');
+        await startWalk('80vw');
 
         if (!isActive) {
           break;
         }
 
         setDirection('left');
-        await controls.start({
-          x: '5vw',
-          rotate: [0, 5, 0, -5, 0],
-          transition: { duration: 12, ease: 'linear' },
-        });
+        await startWalk('5vw');
       }
     };
 
@@ -93,8 +96,9 @@ const RoamingDuck = () => {
   return (
     <motion.div
       animate={controls}
-      // w-12 sm:w-16：窄屏缩小鸭子尺寸，避免其超出视口或遮挡内容
-      className="fixed bottom-4 left-0 z-[40] pointer-events-none w-12 sm:w-16"
+      // w-12 sm:w-16：窄屏缩小鸭子尺寸，避免其超出视口或遮挡内容；
+      // bottom 用 safe-area 兜底，避免 iPhone 底部横条压住鸭子。
+      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-0 z-[40] pointer-events-none w-12 sm:w-16"
     >
       <div
         role="button"

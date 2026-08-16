@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { SITE_CONFIG } from '../config';
+import { useMediaQuery } from '../src/hooks/useMediaQuery';
 
 const DEFAULT_BARRAGE_COLORS = [
   '#facc15',
@@ -36,32 +37,10 @@ const estimateBarrageWidth = (label: string, viewportWidth: number, scale: numbe
 };
 
 /**
- * 监听系统「减少动态效果」偏好，用户开启时组件直接不渲染，
- * 避免无意义的持续滚动动画占用 CPU / GPU。
- */
-const usePrefersReducedMotion = () => {
-  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(
-    () =>
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-  );
-
-  React.useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const onChange = () => setPrefersReducedMotion(media.matches);
-    media.addEventListener('change', onChange);
-
-    return () => media.removeEventListener('change', onChange);
-  }, []);
-
-  return prefersReducedMotion;
-};
-
-/**
  * 彩色弹幕层：按配置文案在固定轨道上持续横向滚动。
  * - 根据文案宽度与视口宽度动态规划轨道数量和间距，避免同轨道弹幕重叠；
  * - 纯装饰层，整层对屏幕阅读器隐藏（aria-hidden）；
- * - 开启「减少动态效果」时整体停用（见 usePrefersReducedMotion）。
+ * - 开启「减少动态效果」时整体停用（useMediaQuery 实时监听系统偏好）。
  */
 const ColorBarrage = () => {
   const barrage = SITE_CONFIG.barrage;
@@ -76,7 +55,7 @@ const ColorBarrage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const prefersReducedMotion = usePrefersReducedMotion();
+  const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
   const barrageTracks = React.useMemo(() => {
     if (!barrage?.enabled || !barrage.items?.length) {
