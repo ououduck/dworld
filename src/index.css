@@ -30,7 +30,9 @@ body {
 }
 
 #root {
+  /* dvh 优先、vh 兜底：移动端动态工具栏收起/展开时避免布局跳动 */
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* ---------- 固定背景噪点层 ---------- */
@@ -41,6 +43,7 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   z-index: 0;
   pointer-events: none;
   opacity: 0.04;
@@ -73,6 +76,11 @@ body {
     transform: translateY(-4px);
     box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
   }
+}
+
+/* 点按反馈：全局去掉了 tap-highlight，这里用 :active 缩放补偿触屏点击手感 */
+.social-btn:active {
+  transform: scale(0.97);
 }
 
 /* ---------- 减少动态效果 ---------- */
