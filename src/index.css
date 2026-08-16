@@ -64,7 +64,13 @@ body {
   font-size: 14px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.5);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* 按压缩放用短过渡（0.12s），悬停/颜色/阴影等保持 0.4s 长过渡 */
+  transition:
+    transform 0.12s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 仅在有 hover 能力的设备（非触摸屏）上应用悬停效果，避免移动端点击后样式“粘住” */
@@ -75,6 +81,11 @@ body {
     color: #fff;
     transform: translateY(-4px);
     box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
+  }
+
+  /* 按下时保留悬停位移再叠加缩放，避免 transform 互相覆盖导致按钮“跳起” */
+  .social-btn:active {
+    transform: translateY(-4px) scale(0.97);
   }
 }
 

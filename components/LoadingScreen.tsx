@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { PixelDuckSvg } from './Icons';
 import { useMediaQuery } from '../src/hooks/useMediaQuery';
@@ -15,23 +15,24 @@ export const LOADING_SKIP_KEY = 'dworld-loading-skipped';
 export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [percent, setPercent] = useState(0);
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  // 进度保存在 ref：useMediaQuery 实时监听偏好变化时 effect 会重跑，
+  // 用 ref 续接进度可避免播放中途切换偏好导致进度归零。
+  const currentRef = useRef(0);
 
   useEffect(() => {
     let completeTimeout: ReturnType<typeof setTimeout> | null = null;
 
     // 开启减少动态效果时用大步长快速完成，避免无意义的花式动画。
-    const step = reducedMotion ? 33 : () => Math.floor(Math.random() * 10) + 5;
+    const step = () => (reducedMotion ? 33 : Math.floor(Math.random() * 10) + 5);
 
-    // 进度用闭包变量推进，updater 保持纯函数：
-    // React 19 StrictMode 会双调用 updater，副作用（clearInterval/setTimeout）放在
-    // updater 外可避免进度冻结或重复调度完成回调。
-    let current = 0;
+    // 副作用（clearInterval / setTimeout）全部放在 setState 之外，updater 保持纯函数：
+    // React 19 StrictMode 会双调用 updater，避免进度冻结或重复调度完成回调。
     const interval = setInterval(
       () => {
-        current = Math.min(current + (typeof step === 'number' ? step : step()), 100);
-        setPercent(current);
+        currentRef.current = Math.min(currentRef.current + step(), 100);
+        setPercent(currentRef.current);
 
-        if (current >= 100) {
+        if (currentRef.current >= 100) {
           clearInterval(interval);
           if (!completeTimeout) {
             completeTimeout = setTimeout(onComplete, reducedMotion ? 60 : 300);
