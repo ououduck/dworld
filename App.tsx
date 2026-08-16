@@ -189,6 +189,8 @@ const App: React.FC = () => {
                           width={128}
                           height={128}
                           decoding="async"
+                          // 不向头像 CDN（q1.qlogo.cn）泄露来源站点信息。
+                          referrerPolicy="no-referrer"
                           // 头像位于首屏顶部，属于 LCP 候选元素，优先加载。
                           fetchPriority="high"
                           onError={(e) => {
@@ -393,6 +395,12 @@ const App: React.FC = () => {
                       {displayIcp}
                     </a>
                   )}
+                  <a
+                    href="./privacy.html"
+                    className="text-[10px] font-mono text-white/10 hover:text-white/40 transition-colors block"
+                  >
+                    隐私说明
+                  </a>
                 </div>
               </motion.footer>
             </motion.main>
