@@ -311,6 +311,8 @@ const App: React.FC = () => {
                         className="w-full h-full object-cover" 
                         alt="跑路的duck 头像" 
                         decoding="async"
+                        // 头像位于首屏顶部，属于 LCP 候选元素，优先加载。
+                        fetchPriority="high"
                         onError={(e) => {
                           if (avatarFallbackUsed.current) {
                             return;
@@ -472,6 +474,8 @@ const App: React.FC = () => {
             initial={{ y: 50, opacity: 0, scale: 0.9 }} 
             animate={{ y: 0, opacity: 1, scale: 1 }} 
             exit={{ y: 20, opacity: 0, scale: 0.9 }}
+            role="status"
+            aria-live="polite"
             className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] px-8 py-4 bg-[#111]/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-4"
           >
             <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]" />
