@@ -73,6 +73,13 @@ body {
     box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* 点按反馈：全局去掉了 tap-highlight，这里用 :active 缩放补偿触屏点击手感。
+   注意：本规则必须位于 hover 媒体查询块之前，否则同优先级下后者（hover 版）
+   会覆盖普通版；hover 设备由下方媒体查询内的规则接管。 */
+.social-btn:active {
+  transform: scale(0.97);
+}
+
 /* 仅在有 hover 能力的设备（非触摸屏）上应用悬停效果，避免移动端点击后样式“粘住” */
 @media (hover: hover) {
   .social-btn:hover {
@@ -87,11 +94,6 @@ body {
   .social-btn:active {
     transform: translateY(-4px) scale(0.97);
   }
-}
-
-/* 点按反馈：全局去掉了 tap-highlight，这里用 :active 缩放补偿触屏点击手感 */
-.social-btn:active {
-  transform: scale(0.97);
 }
 
 /* ---------- 减少动态效果 ---------- */
