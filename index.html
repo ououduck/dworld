@@ -103,8 +103,8 @@
     </script>
   </head>
   <body>
-    <!-- 全局噪点纹理背景，独立于 React 根节点，避免重渲染影响 -->
-    <div class="bg-noise"></div>
+    <!-- 全局噪点纹理背景，独立于 React 根节点，避免重渲染影响；纯装饰，对读屏隐藏 -->
+    <div class="bg-noise" aria-hidden="true"></div>
     <div id="root"></div>
     <!-- 应用入口：Tailwind 样式由 Vite 在构建期编译注入，不再依赖 CDN 运行时 -->
     <script type="module" src="./index.tsx"></script>

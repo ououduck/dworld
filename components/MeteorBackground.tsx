@@ -24,7 +24,7 @@ export const MeteorBackground = ({ number = 15 }: { number?: number }) => {
   );
 
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
       {meteorStyles.map((style, idx) => (
         <span
           key={`meteor-${idx}`}
