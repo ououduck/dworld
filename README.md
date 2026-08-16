@@ -72,7 +72,7 @@ npm run preview      # 本地预览构建产物
 ├── .prettierrc.json          # Prettier 格式化规则
 ├── .env.example              # 环境变量示例（VITE_BASE_PATH 子路径部署）
 ├── .gitattributes            # 换行符与二进制文件标记
-└── public/                   # robots.txt / sitemap.xml / favicon / logo
+└── public/                   # robots.txt / sitemap.xml / favicon / logo / apple-touch-icon / privacy.html
 ```
 
 ## 内容管理（Pages CMS）
