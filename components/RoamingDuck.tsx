@@ -88,7 +88,20 @@ const RoamingDuck = () => {
       // w-12 sm:w-16：窄屏缩小鸭子尺寸，避免其超出视口或遮挡内容
       className="fixed bottom-4 left-0 z-[40] pointer-events-none w-12 sm:w-16"
     >
-      <div className="relative pointer-events-auto cursor-pointer" onClick={handleClick}>
+      <div
+        role="button"
+        aria-label="戳一下鸭子"
+        tabIndex={0}
+        // 键盘用户可通过 Enter / 空格触发相同的气泡反馈，与鼠标点击保持一致。
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleClick();
+          }
+        }}
+        onClick={handleClick}
+        className="relative pointer-events-auto cursor-pointer focus:outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-yellow-400/60"
+      >
         <AnimatePresence>
           {speech && (
             <div className="absolute -top-8 left-1/2 -translate-x-1/2">
