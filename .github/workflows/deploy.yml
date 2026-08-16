@@ -15,9 +15,10 @@ on:
   workflow_dispatch:
     inputs:
       payload:
-        description: 'Pages CMS payload as JSON，手动触发可用 {"repository":{"ref":"main"}}'
-        required: true
+        description: 'Pages CMS payload as JSON（留空时按默认 {} 处理，即部署当前分支）'
+        required: false
         type: string
+        default: '{}'
 
 concurrency:
   # 连续触发只保留最新一次：避免快速连点产生重复构建/部署。
@@ -35,13 +36,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v5
         with:
-          # Pages CMS 触发时按 CMS 当前打开的分支（main）检出；手动触发时回退到触发分支。
-          ref: ${{ inputs.payload != '' && fromJSON(inputs.payload).repository.ref || '' }}
+          # Pages CMS 触发时按 CMS 当前打开的分支（main）检出；手动触发（空 payload）时回退到触发分支。
+          # GHA 表达式对空值安全：fromJSON('{}').repository.ref 返回空串，不会报错。
+          ref: ${{ fromJSON(inputs.payload).repository.ref || '' }}
 
       - name: Show dispatch context
         run: |
-          echo "Ref: ${{ inputs.payload != '' && fromJSON(inputs.payload).repository.ref || github.ref }}"
-          echo "Triggered by: ${{ inputs.payload != '' && fromJSON(inputs.payload).triggeredBy.githubUsername || 'manual' }}"
+          echo "Ref: ${{ fromJSON(inputs.payload).repository.ref || github.ref }}"
+          echo "Triggered by: ${{ fromJSON(inputs.payload).triggeredBy.githubUsername || 'manual' }}"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -52,10 +54,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 类型检查（含站点配置 JSON 字段校验）：缺字段/类型不符的配置在部署前即失败，
+      # 避免「CMS 保存了无效配置 → 构建照常成功 → 线上运行时才报错」。
+      - name: Type check
+        run: npm run check
+
       - name: Build site
         run: npm run build
-        env:
-          VITE_SITE_URL: https://www.pldduck.com
 
       - name: Deploy to Cloudflare Pages
         env:
