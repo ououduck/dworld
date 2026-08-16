@@ -41,6 +41,8 @@ npm run build        # 生产构建 → dist/
 npm run preview      # 本地预览构建产物
 ```
 
+提交前建议执行 `npm run check && npm run lint`，与部署流水线（deploy.yml 中的 Type check 步骤）保持一致，尽早拦截类型与规范问题。
+
 ## 目录结构
 
 ```
