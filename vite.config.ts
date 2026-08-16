@@ -24,5 +24,15 @@ export default defineConfig({
     outDir: 'dist',
     // 当前项目未依赖线上调试 sourcemap，关闭后可减少构建产物体积。
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        // 将体积大且更新频率低的第三方库拆成独立 chunk：
+        // 依赖升级时只有对应 vendor chunk 失效，主包与应用 chunk 可复用浏览器缓存。
+        manualChunks: {
+          'vendor-motion': ['framer-motion'],
+          'vendor-icons': ['lucide-react'],
+        },
+      },
+    },
   },
 });
