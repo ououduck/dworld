@@ -1,0 +1,20 @@
+# Dependabot 自动更新：每周检查一次依赖与 GitHub Actions 版本。
+# Actions 使用 tag（checkout@v5 / setup-node@v4）时，依赖机器人负责跟进小版本，
+# 降低供应链风险（完整 SHA 锁定的项目可跳过 Actions 段）。
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    labels:
+      - "ci"
