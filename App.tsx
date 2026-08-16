@@ -379,7 +379,7 @@ const App: React.FC = () => {
                 <Github size={18} className="group-hover:rotate-12 transition-transform"/>
                 <span>GitHub</span>
               </a>
-              <button onClick={() => handleCopy(SITE_CONFIG.socials.qq, 'QQ')} className="social-btn group">
+              <button type="button" onClick={() => handleCopy(SITE_CONFIG.socials.qq, 'QQ')} className="social-btn group">
                 <QQIcon className="w-4 h-4 group-hover:scale-110 transition-transform"/>
                 <span>QQ</span>
               </button>
