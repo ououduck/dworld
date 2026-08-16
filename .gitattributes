@@ -1,0 +1,22 @@
+# 统一换行符：文本文件按平台自动转换，源码文件固定 LF，避免跨平台 diff 噪音。
+* text=auto
+
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.svg text eol=lf
+
+# 二进制文件标记，避免被 Git 误判文本而损坏。
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
