@@ -128,4 +128,4 @@ npm run preview      # 本地预览构建产物
 
 ## License
 
-MIT
+[MIT](LICENSE)
