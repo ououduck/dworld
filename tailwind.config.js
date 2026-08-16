@@ -41,7 +41,7 @@ export default {
       animation: {
         'fade-in': 'fadeIn 0.8s ease-out forwards',
         'slide-up': 'slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
-        'meteor': 'meteor 5s linear infinite',
+        meteor: 'meteor 5s linear infinite',
         'text-shimmer': 'text-shimmer 2.5s ease-out infinite alternate',
       },
       keyframes: {

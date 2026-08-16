@@ -23,7 +23,7 @@ content:
             label: 在线状态（online 显示绿点）
             type: select
             options:
-              values: ["online", "offline"]
+              values: ['online', 'offline']
 
       - name: identity
         label: 站点信息 · 域名记忆卡片
@@ -62,7 +62,7 @@ content:
             list:
               collapsible:
                 collapsed: true
-                summary: "{text}"
+                summary: '{text}'
             fields:
               - { name: text, label: 文案, type: string, required: true }
               - { name: color, label: 颜色（可选，留空自动分配）, type: string }
@@ -73,7 +73,7 @@ content:
         list:
           collapsible:
             collapsed: true
-            summary: "{title}"
+            summary: '{title}'
         fields:
           - { name: title, label: 名称, type: string, required: true }
           - { name: en, label: 英文角标, type: string }
@@ -83,12 +83,20 @@ content:
             label: 图标
             type: select
             options:
-              values: ["Globe", "Code2", "Disc", "Server", "Activity", "Zap"]
+              values: ['Globe', 'Code2', 'Disc', 'Server', 'Activity', 'Zap']
           - name: color
             label: 图标颜色
             type: select
             options:
-              values: ["text-blue-400", "text-purple-400", "text-green-400", "text-yellow-400", "text-pink-400", "text-cyan-400"]
+              values:
+                [
+                  'text-blue-400',
+                  'text-purple-400',
+                  'text-green-400',
+                  'text-yellow-400',
+                  'text-pink-400',
+                  'text-cyan-400',
+                ]
 
       - name: projects
         label: 跳转卡片 · 开源项目
@@ -96,7 +104,7 @@ content:
         list:
           collapsible:
             collapsed: true
-            summary: "{title}"
+            summary: '{title}'
         fields:
           - { name: title, label: 项目名称, type: string, required: true }
           - { name: desc, label: 项目简介, type: string }
@@ -105,7 +113,7 @@ content:
             label: 图标
             type: select
             options:
-              values: ["Globe", "Code2", "Disc", "Server", "Activity", "Zap"]
+              values: ['Globe', 'Code2', 'Disc', 'Server', 'Activity', 'Zap']
           - { name: tag, label: 技术标签, type: string }
 
       - name: footer
@@ -121,7 +129,7 @@ content:
             list:
               collapsible:
                 collapsed: true
-                summary: "{domain}"
+                summary: '{domain}'
             fields:
               - { name: domain, label: 匹配域名, type: string }
               - { name: icp, label: 备案号, type: string }

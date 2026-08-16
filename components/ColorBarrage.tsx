@@ -2,7 +2,16 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { SITE_CONFIG } from '../config';
 
-const DEFAULT_BARRAGE_COLORS = ['#facc15', '#38bdf8', '#c084fc', '#34d399', '#fb7185', '#f97316', '#60a5fa', '#a3e635'];
+const DEFAULT_BARRAGE_COLORS = [
+  '#facc15',
+  '#38bdf8',
+  '#c084fc',
+  '#34d399',
+  '#fb7185',
+  '#f97316',
+  '#60a5fa',
+  '#a3e635',
+];
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
@@ -13,13 +22,15 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 const estimateBarrageWidth = (label: string, viewportWidth: number, scale: number) => {
   const fontSize = viewportWidth < 640 ? 12 : 14;
   const horizontalPadding = viewportWidth < 640 ? 24 : 32;
-  const textWidth = Array.from(label).reduce((width, character) => {
-    if (character === ' ') {
-      return width + 0.35;
-    }
+  const textWidth =
+    Array.from(label).reduce((width, character) => {
+      if (character === ' ') {
+        return width + 0.35;
+      }
 
-    return width + (/^[\u0000-\u00ff]$/.test(character) ? 0.56 : 1);
-  }, 0) * fontSize;
+      // 按码点判断宽窄：单字节（ASCII）字符按 0.56、其余（中文等）按 1 估算。
+      return width + (character.charCodeAt(0) <= 0xff ? 0.56 : 1);
+    }, 0) * fontSize;
 
   return (textWidth + horizontalPadding + 2) * scale;
 };
@@ -29,10 +40,11 @@ const estimateBarrageWidth = (label: string, viewportWidth: number, scale: numbe
  * 避免无意义的持续滚动动画占用 CPU / GPU。
  */
 const usePrefersReducedMotion = () => {
-  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(() => (
-    typeof window !== 'undefined'
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  ));
+  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
 
   React.useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -53,9 +65,9 @@ const usePrefersReducedMotion = () => {
  */
 const ColorBarrage = () => {
   const barrage = SITE_CONFIG.barrage;
-  const [viewportWidth, setViewportWidth] = React.useState(() => (
-    typeof window === 'undefined' ? 1280 : Math.max(320, window.innerWidth)
-  ));
+  const [viewportWidth, setViewportWidth] = React.useState(() =>
+    typeof window === 'undefined' ? 1280 : Math.max(320, window.innerWidth),
+  );
 
   React.useEffect(() => {
     const handleResize = () => setViewportWidth(Math.max(320, window.innerWidth));
@@ -76,7 +88,11 @@ const ColorBarrage = () => {
     const pillHeight = viewportWidth < 640 ? 30 : 36;
     const rowGap = clamp(Math.max(barrage.rowGap ?? 52, pillHeight + 10), 38, 80);
     const minDuration = clamp(barrage.speed?.min ?? 18, 12, 36);
-    const maxDuration = clamp(Math.max(minDuration, barrage.speed?.max ?? minDuration), minDuration, 42);
+    const maxDuration = clamp(
+      Math.max(minDuration, barrage.speed?.max ?? minDuration),
+      minDuration,
+      42,
+    );
     const travelDistance = viewportWidth * 2.72;
     const horizontalGap = clamp(viewportWidth * 0.08, 48, 96);
     const entries = barrage.items
@@ -90,11 +106,12 @@ const ColorBarrage = () => {
         return {
           index,
           label,
-          color: typeof item === 'string'
-            ? DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length]
-            : item.color || DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length],
+          color:
+            typeof item === 'string'
+              ? DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length]
+              : item.color || DEFAULT_BARRAGE_COLORS[index % DEFAULT_BARRAGE_COLORS.length],
           scale,
-          width: estimateBarrageWidth(label, viewportWidth, scale)
+          width: estimateBarrageWidth(label, viewportWidth, scale),
         };
       })
       .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
@@ -104,26 +121,37 @@ const ColorBarrage = () => {
     }
 
     // 轨道总负载过高时自动增加轨道，优先保证同轨道弹幕有足够的横向空间。
-    const totalTrackWidth = entries.reduce((width, entry) => width + entry.width + horizontalGap, 0);
+    const totalTrackWidth = entries.reduce(
+      (width, entry) => width + entry.width + horizontalGap,
+      0,
+    );
     const laneCapacity = travelDistance * 0.78;
-    const laneCount = clamp(Math.max(requestedLaneCount, Math.ceil(totalTrackWidth / laneCapacity)), 1, 6);
+    const laneCount = clamp(
+      Math.max(requestedLaneCount, Math.ceil(totalTrackWidth / laneCapacity)),
+      1,
+      6,
+    );
     const lanes = Array.from({ length: laneCount }, () => ({
       load: 0,
-      entries: [] as typeof entries
+      entries: [] as typeof entries,
     }));
 
-    entries.forEach(entry => {
-      const lane = lanes.reduce((lightest, current) => current.load < lightest.load ? current : lightest, lanes[0]);
+    entries.forEach((entry) => {
+      const lane = lanes.reduce(
+        (lightest, current) => (current.load < lightest.load ? current : lightest),
+        lanes[0],
+      );
       lane.entries.push(entry);
       lane.load += entry.width + horizontalGap;
     });
 
     const durationRange = maxDuration - minDuration;
     return lanes.flatMap((lane, laneIndex) => {
-      const duration = minDuration + (durationRange === 0 ? 0 : (laneIndex * 3) % (durationRange + 1));
+      const duration =
+        minDuration + (durationRange === 0 ? 0 : (laneIndex * 3) % (durationRange + 1));
       let offset = 0;
 
-      return lane.entries.map(entry => {
+      return lane.entries.map((entry) => {
         // 负 delay 让弹幕进入视口时就已处于轨道中间位置，营造“已有弹幕在滚动”的连贯感。
         const delay = -(offset / travelDistance) * duration;
         offset += entry.width + horizontalGap;
@@ -135,7 +163,7 @@ const ColorBarrage = () => {
           top: topOffset + laneIndex * rowGap,
           duration,
           delay,
-          scale: entry.scale
+          scale: entry.scale,
         };
       });
     });
@@ -147,7 +175,7 @@ const ColorBarrage = () => {
 
   return (
     <div className="fixed inset-0 z-[30] overflow-hidden pointer-events-none" aria-hidden="true">
-      {barrageTracks.map(track => (
+      {barrageTracks.map((track) => (
         <motion.div
           key={track.id}
           className="absolute left-0 whitespace-nowrap will-change-transform"
@@ -159,7 +187,7 @@ const ColorBarrage = () => {
             delay: track.delay,
             ease: 'linear',
             repeat: Infinity,
-            repeatType: 'loop'
+            repeatType: 'loop',
           }}
         >
           {/* 胶囊背景已近不透明，去掉 backdrop-blur 可显著降低移动端持续滚动的重绘开销 */}
@@ -170,7 +198,7 @@ const ColorBarrage = () => {
               borderColor: `${track.color}55`,
               background: `linear-gradient(135deg, ${track.color}22, rgba(10, 10, 10, 0.82))`,
               boxShadow: `0 10px 30px ${track.color}22`,
-              transform: `scale(${track.scale})`
+              transform: `scale(${track.scale})`,
             }}
           >
             {track.label}

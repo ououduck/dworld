@@ -18,10 +18,11 @@ const RoamingDuck = () => {
   // - prefers-reduced-motion: reduce —— 用户开启减少动态效果时停止漫游动画。
   // 两种情况都让鸭子保持静止，仅保留点击气泡反馈。
   const canRoam = React.useMemo(
-    () => typeof window !== 'undefined'
-      && window.matchMedia('(hover: hover)').matches
-      && !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    []
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(hover: hover)').matches &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    [],
   );
 
   React.useEffect(() => {
@@ -37,7 +38,7 @@ const RoamingDuck = () => {
         await controls.start({
           x: '80vw',
           rotate: [0, 5, 0, -5, 0],
-          transition: { duration: 12, ease: 'linear' }
+          transition: { duration: 12, ease: 'linear' },
         });
 
         if (!isActive) {
@@ -48,7 +49,7 @@ const RoamingDuck = () => {
         await controls.start({
           x: '5vw',
           rotate: [0, 5, 0, -5, 0],
-          transition: { duration: 12, ease: 'linear' }
+          transition: { duration: 12, ease: 'linear' },
         });
       }
     };
@@ -65,7 +66,14 @@ const RoamingDuck = () => {
   }, [canRoam, controls]);
 
   const handleClick = () => {
-    const phrases = ['嘎嘎！', '不准跑路！', 'Quack!', 'DWorld 永远的神', '你在看我吗？', '给点代码吃吃吧'];
+    const phrases = [
+      '嘎嘎！',
+      '不准跑路！',
+      'Quack!',
+      'DWorld 永远的神',
+      '你在看我吗？',
+      '给点代码吃吃吧',
+    ];
     setSpeech(phrases[Math.floor(Math.random() * phrases.length)]);
 
     // 鸭子静止时（触屏或减少动态效果），点击用一次弹跳模拟“被戳了一下”的反馈。

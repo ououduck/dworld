@@ -69,11 +69,11 @@ npm run preview  # 本地预览构建产物
 
 ### 仓库 Secrets（需在 GitHub 仓库 Settings → Secrets and variables 配置）
 
-| Secret | 用途 |
-| --- | --- |
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API Token（权限含 Pages: Edit） |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 账户 ID |
-| `EDGEONE_API_TOKEN` | EdgeOne API Token |
+| Secret                  | 用途                                       |
+| ----------------------- | ------------------------------------------ |
+| `CLOUDFLARE_API_TOKEN`  | Cloudflare API Token（权限含 Pages: Edit） |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 账户 ID                         |
+| `EDGEONE_API_TOKEN`     | EdgeOne API Token                          |
 
 ### 平台侧一次性准备
 
