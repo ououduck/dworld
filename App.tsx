@@ -13,10 +13,11 @@ import {
   Code2,
   Zap,
 } from 'lucide-react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig, Variants } from 'framer-motion';
 import { MeteorBackground } from './components/MeteorBackground';
 import { SITE_CONFIG } from './config';
 import { QQIcon, PixelDuckSvg } from './components/Icons';
+import { useMediaQuery } from './src/hooks/useMediaQuery';
 
 /**
  * 装饰组件（弹幕 / 漫游鸭子）拆包懒加载：
@@ -96,40 +97,32 @@ const BentoCard = ({ children, className = '', href, onClick }: BentoCardProps) 
  */
 const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [percent, setPercent] = useState(0);
-  const [reducedMotion] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-  );
+  const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
   useEffect(() => {
-    // 同一会话二次访问：直接跳过加载屏，保留首访的仪式感。
-    try {
-      if (sessionStorage.getItem(LOADING_SKIP_KEY)) {
-        onComplete();
-        return;
-      }
-    } catch {
-      // sessionStorage 不可用（如隐私模式）时忽略，按正常流程播放。
-    }
+    // 同会话二次访问的跳过逻辑已前移到 App 的 loading 初始值（见 App 组件），
+    // 本组件被渲染时一定是首次访问，无需再检查 sessionStorage。
 
     let completeTimeout: ReturnType<typeof setTimeout> | null = null;
 
     // 开启减少动态效果时用大步长快速完成，避免无意义的花式动画。
     const step = reducedMotion ? 33 : () => Math.floor(Math.random() * 10) + 5;
 
+    // 进度用闭包变量推进，updater 保持纯函数：
+    // React 19 StrictMode 会双调用 updater，副作用（clearInterval/setTimeout）放在
+    // updater 外可避免进度冻结或重复调度完成回调。
+    let current = 0;
     const interval = setInterval(
       () => {
-        setPercent((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            if (!completeTimeout) {
-              completeTimeout = setTimeout(onComplete, reducedMotion ? 60 : 300);
-            }
-            return 100;
+        current = Math.min(current + (typeof step === 'number' ? step : step()), 100);
+        setPercent(current);
+
+        if (current >= 100) {
+          clearInterval(interval);
+          if (!completeTimeout) {
+            completeTimeout = setTimeout(onComplete, reducedMotion ? 60 : 300);
           }
-          return Math.min(prev + (typeof step === 'number' ? step : step()), 100);
-        });
+        }
       },
       reducedMotion ? 20 : 60,
     );
@@ -173,7 +166,14 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
         )}
       </div>
 
-      <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mb-4">
+      <div
+        className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mb-4"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+        aria-label="页面加载进度"
+      >
         <motion.div
           className="h-full bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.5)]"
           initial={{ width: 0 }}
@@ -189,7 +189,7 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
         <span className="text-white/40 font-mono text-[10px] tracking-widest uppercase">
           欢迎来到D的世界...
         </span>
-        <span className="text-yellow-400 font-brand text-xl">{Math.min(percent, 100)}%</span>
+        <span className="text-yellow-400 font-brand text-xl">{percent}%</span>
       </motion.div>
 
       <div className="absolute inset-0 pointer-events-none">
@@ -200,7 +200,16 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
 };
 
 const App: React.FC = () => {
-  const [loading, setLoading] = useState(true);
+  // 同会话二次访问直接跳过加载屏：初始值在首帧渲染前判断，避免
+  // 「先渲染加载屏再退出」导致仍会播放一次退出动画。
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem(LOADING_SKIP_KEY);
+    } catch {
+      // sessionStorage 不可用（如隐私模式）时按首次访问处理。
+      return true;
+    }
+  });
   const [toast, setToast] = useState<string | null>(null);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // 头像回退标记：外部头像源失败时回退到占位图，且只回退一次，避免 onError 循环。
@@ -239,12 +248,15 @@ const App: React.FC = () => {
         textArea.style.position = 'fixed';
         textArea.style.opacity = '0';
         document.body.appendChild(textArea);
-        textArea.select();
-        const copied = document.execCommand('copy');
-        document.body.removeChild(textArea);
-
-        if (!copied) {
-          throw new Error('Fallback copy command failed');
+        try {
+          textArea.select();
+          const copied = document.execCommand('copy');
+          if (!copied) {
+            throw new Error('Fallback copy command failed');
+          }
+        } finally {
+          // execCommand 抛异常时也要移除 textarea，避免残留隐藏节点。
+          document.body.removeChild(textArea);
         }
       }
 
@@ -293,7 +305,11 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-yellow-400 selection:text-black">
+    // MotionConfig reducedMotion="user"：系统开启「减少动态效果」时，
+    // framer-motion 的 JS 驱动动画（如在线状态点脉冲）自动停用，
+    // 与弹幕 / 鸭子等组件各自的显式处理保持一致。
+    <MotionConfig reducedMotion="user">
+      <div className="min-h-screen bg-[#050505] text-white selection:bg-yellow-400 selection:text-black">
       {/* 启动页先独占视图，避免首屏内容与入场动画同时出现造成视觉干扰。 */}
       <AnimatePresence mode="wait">
         {loading && <LoadingScreen key="loading" onComplete={handleLoadingComplete} />}
@@ -326,6 +342,9 @@ const App: React.FC = () => {
                         src={SITE_CONFIG.profile.logo}
                         className="w-full h-full object-cover"
                         alt="跑路的duck 头像"
+                        // 容器固定 128px，width/height 声明与之一致，配合 decoding/fetchPriority 减少 CLS 与解码阻塞。
+                        width={128}
+                        height={128}
                         decoding="async"
                         // 头像位于首屏顶部，属于 LCP 候选元素，优先加载。
                         fetchPriority="high"
@@ -514,7 +533,7 @@ const App: React.FC = () => {
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-px bg-gradient-to-r from-transparent to-white/10" />
-                <PixelDuckSvg className="w-6 h-6 opacity-20 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer" />
+                <PixelDuckSvg className="w-6 h-6 opacity-20 grayscale hover:grayscale-0 hover:opacity-100 transition-all" />
                 <div className="w-12 h-px bg-gradient-to-l from-transparent to-white/10" />
               </div>
               <div className="text-center space-y-3">
@@ -546,14 +565,15 @@ const App: React.FC = () => {
             exit={{ y: 20, opacity: 0, scale: 0.9 }}
             role="status"
             aria-live="polite"
-            className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] px-8 py-4 bg-[#111]/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-4"
+            className="fixed bottom-[max(3rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[200] px-8 py-4 bg-[#111]/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-4"
           >
             <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]" />
             <span className="text-xs font-bold tracking-wide">{toast}</span>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </MotionConfig>
   );
 };
 
