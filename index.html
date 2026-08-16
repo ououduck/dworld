@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://www.pldduck.com/" />
 
     <!-- ========== 站点图标 ========== -->
-    <link rel="icon" href="./favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="./favicon.ico" />
     <link rel="apple-touch-icon" href="./logo.png" />
 
     <!-- ========== Open Graph（微信 / 微博 / Telegram 等社交平台抓取卡片） ========== -->
@@ -29,15 +29,18 @@
     />
     <meta property="og:url" content="https://www.pldduck.com/" />
     <meta property="og:image" content="https://www.pldduck.com/logo.png" />
+    <meta property="og:image:alt" content="跑路的duck 的像素鸭子 Logo" />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="494" />
     <meta property="og:locale" content="zh_CN" />
 
     <!-- ========== Twitter Card ========== -->
-    <meta name="twitter:card" content="summary_large_image" />
+    <!-- logo 为 512x494 小图，低于 large_image 的 1200x630 推荐尺寸，使用 summary 卡片 -->
+    <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="D的世界 - 跑路的duck | 个人主页" />
     <meta name="twitter:description" content="一只游手好闲的鸭子。技术分享、开源项目与生活随笔。" />
     <meta name="twitter:image" content="https://www.pldduck.com/logo.png" />
+    <meta name="twitter:image:alt" content="跑路的duck 的像素鸭子 Logo" />
 
     <!-- ========== 结构化数据：让搜索引擎识别站点主体人物信息 ========== -->
     <script type="application/ld+json">
@@ -49,7 +52,7 @@
         "description": "一只游手好闲的鸭子，技术分享与开源项目作者。",
         "email": "mailto:i@pldduck.com",
         "sameAs": ["https://github.com/ououduck"],
-        "logo": "https://www.pldduck.com/logo.png"
+        "image": "https://www.pldduck.com/logo.png"
       }
     </script>
     <!-- WebSite 结构化数据：声明搜索收录的官方域名，帮助搜索引擎理解站点归属 -->
