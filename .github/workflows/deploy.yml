@@ -36,14 +36,21 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v5
         with:
-          # Pages CMS 触发时按 CMS 当前打开的分支（main）检出；手动触发（空 payload）时回退到触发分支。
+          # Pages CMS 触发时按 CMS 当前打开的分支检出（校验见下一步，仅允许 main）；
+          # 手动触发（空 payload）时回退到触发分支。
           # GHA 表达式对空值安全：fromJSON('{}').repository.ref 返回空串，不会报错。
           ref: ${{ fromJSON(inputs.payload).repository.ref || '' }}
 
-      - name: Show dispatch context
+      # 站点只部署 main：workflow_dispatch 的 payload 是外部可控 JSON，若直接采用任意
+      # repository.ref，恶意分支的构建代码会在持有部署令牌的环境中执行。此处显式校验，
+      # 非 main 分支直接失败（空 payload 表示手动触发，放行）。
+      - name: Validate dispatch ref
         run: |
-          echo "Ref: ${{ fromJSON(inputs.payload).repository.ref || github.ref }}"
-          echo "Triggered by: ${{ fromJSON(inputs.payload).triggeredBy.githubUsername || 'manual' }}"
+          REF="${{ fromJSON(inputs.payload).repository.ref }}"
+          if [ -n "$REF" ] && [ "$REF" != "main" ]; then
+            echo "::error::部署仅允许 main 分支，收到 ref: $REF"
+            exit 1
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
