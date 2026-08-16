@@ -22,7 +22,11 @@ export interface SiteProfile {
   logo: string;
   description: string;
   tags: string[];
-  /** online 显示绿色在线点，其余状态显示灰色点。 */
+  /**
+   * online 显示绿色在线点，其余状态显示灰色点（App.tsx 运行时判断）。
+   * 说明：JSON 导入的类型推断为宽松 string，这里保持 string 以便类型检查仍能
+   * 拦截「整个字段缺失」；取值合法性由 App 端 === 'online' 判断兜底。
+   */
   status: string;
 }
 

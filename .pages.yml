@@ -5,6 +5,8 @@ content:
   # 包含：个人名片、域名记忆卡、社交链接、弹幕、跳转卡片（我的站点 / 开源项目）、页脚备案。
   # 注意：对象数组用 type: object + list: true（list 可带 collapsible 折叠选项），
   # 不要用 type: list + item，后者会导致 CMS 把对象项渲染成 [object Object]。
+  # required 标记与 config/site.config.ts 的类型约束保持一致：CMS 可留空的字段，
+  # 在类型层也是可选的（如弹幕颜色），避免「CMS 保存成功 → 部署时类型检查失败」。
   - name: siteConfig
     label: 站点配置
     type: file
@@ -17,52 +19,53 @@ content:
         fields:
           - { name: name, label: 昵称, type: string, required: true }
           - { name: logo, label: 头像链接, type: string, required: true }
-          - { name: description, label: 一句话简介, type: string }
-          - { name: tags, label: 标签, type: string, list: true }
+          - { name: description, label: 一句话简介, type: string, required: true }
+          - { name: tags, label: 标签, type: string, list: true, required: true }
           - name: status
             label: 在线状态（online 显示绿点）
             type: select
+            required: true
             options:
-              values: ['online', 'offline']
+              values: ["online", "offline"]
 
       - name: identity
         label: 站点信息 · 域名记忆卡片
         type: object
         fields:
-          - { name: label, label: 助记词标签, type: string }
+          - { name: label, label: 助记词标签, type: string, required: true }
           - { name: domain, label: 主域名（点击复制）, type: string, required: true }
-          - { name: memorySentence, label: 助记引导语, type: string }
-          - { name: memoryDetail, label: 助记内容, type: string }
+          - { name: memorySentence, label: 助记引导语, type: string, required: true }
+          - { name: memoryDetail, label: 助记内容, type: string, required: true }
 
       - name: socials
         label: 站点信息 · 社交链接
         type: object
         fields:
-          - { name: github, label: GitHub 主页, type: string }
-          - { name: qq, label: QQ 号（点击复制）, type: string }
-          - { name: email, label: 邮箱, type: string }
+          - { name: github, label: GitHub 主页, type: string, required: true }
+          - { name: qq, label: QQ 号（点击复制）, type: string, required: true }
+          - { name: email, label: 邮箱, type: string, required: true }
 
       - name: barrage
         label: 彩色弹幕
         type: object
         fields:
-          - { name: enabled, label: 启用弹幕, type: boolean }
-          - { name: topOffset, label: 顶部偏移（px）, type: number }
-          - { name: rowGap, label: 行间距（px）, type: number }
-          - { name: rows, label: 行数, type: number }
+          - { name: enabled, label: 启用弹幕, type: boolean, required: true }
+          - { name: topOffset, label: 顶部偏移（px）, type: number, required: true }
+          - { name: rowGap, label: 行间距（px）, type: number, required: true }
+          - { name: rows, label: 行数, type: number, required: true }
           - name: speed
             label: 速度范围（秒）
             type: object
             fields:
-              - { name: min, label: 最小秒数, type: number }
-              - { name: max, label: 最大秒数, type: number }
+              - { name: min, label: 最小秒数, type: number, required: true }
+              - { name: max, label: 最大秒数, type: number, required: true }
           - name: items
             label: 弹幕文案
             type: object
             list:
               collapsible:
                 collapsed: true
-                summary: '{text}'
+                summary: "{text}"
             fields:
               - { name: text, label: 文案, type: string, required: true }
               - { name: color, label: 颜色（可选，留空自动分配）, type: string }
@@ -73,30 +76,24 @@ content:
         list:
           collapsible:
             collapsed: true
-            summary: '{title}'
+            summary: "{title}"
         fields:
           - { name: title, label: 名称, type: string, required: true }
-          - { name: en, label: 英文角标, type: string }
-          - { name: desc, label: 简介, type: string }
+          - { name: en, label: 英文角标, type: string, required: true }
+          - { name: desc, label: 简介, type: string, required: true }
           - { name: url, label: 跳转链接, type: string, required: true }
           - name: icon
             label: 图标
             type: select
+            required: true
             options:
-              values: ['Globe', 'Code2', 'Disc', 'Server', 'Activity', 'Zap']
+              values: ["Globe", "Code2", "Disc", "Server", "Activity", "Zap"]
           - name: color
             label: 图标颜色
             type: select
+            required: true
             options:
-              values:
-                [
-                  'text-blue-400',
-                  'text-purple-400',
-                  'text-green-400',
-                  'text-yellow-400',
-                  'text-pink-400',
-                  'text-cyan-400',
-                ]
+              values: ["text-blue-400", "text-purple-400", "text-green-400", "text-yellow-400", "text-pink-400", "text-cyan-400"]
 
       - name: projects
         label: 跳转卡片 · 开源项目
@@ -104,36 +101,37 @@ content:
         list:
           collapsible:
             collapsed: true
-            summary: '{title}'
+            summary: "{title}"
         fields:
           - { name: title, label: 项目名称, type: string, required: true }
-          - { name: desc, label: 项目简介, type: string }
+          - { name: desc, label: 项目简介, type: string, required: true }
           - { name: url, label: 仓库链接, type: string, required: true }
           - name: icon
             label: 图标
             type: select
+            required: true
             options:
-              values: ['Globe', 'Code2', 'Disc', 'Server', 'Activity', 'Zap']
-          - { name: tag, label: 技术标签, type: string }
+              values: ["Globe", "Code2", "Disc", "Server", "Activity", "Zap"]
+          - { name: tag, label: 技术标签, type: string, required: true }
 
       - name: footer
         label: 页脚 / 备案
         type: object
         fields:
-          - { name: copyright, label: 版权文字, type: string }
-          - { name: defaultIcp, label: 默认备案号（留空则不展示）, type: string }
-          - { name: defaultIcpUrl, label: 默认备案链接, type: string }
+          - { name: copyright, label: 版权文字, type: string, required: true }
+          - { name: defaultIcp, label: 默认备案号（留空则不展示）, type: string, required: true }
+          - { name: defaultIcpUrl, label: 默认备案链接, type: string, required: true }
           - name: icpConfigs
             label: 按域名匹配的备案配置
             type: object
             list:
               collapsible:
                 collapsed: true
-                summary: '{domain}'
+                summary: "{domain}"
             fields:
-              - { name: domain, label: 匹配域名, type: string }
-              - { name: icp, label: 备案号, type: string }
-              - { name: icpUrl, label: 备案链接, type: string }
+              - { name: domain, label: 匹配域名, type: string, required: true }
+              - { name: icp, label: 备案号, type: string, required: true }
+              - { name: icpUrl, label: 备案链接, type: string, required: true }
 
 # ── 部署动作：CMS 侧边栏按钮，触发 .github/workflows/deploy.yml ──
 # 文档: https://pagescms.org/docs/configuration/actions/
