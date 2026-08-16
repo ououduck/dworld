@@ -123,6 +123,7 @@ npm run preview      # 本地预览构建产物
 ## 部署注意
 
 - 构建产物使用相对路径（`base: './'`，可用环境变量 `VITE_BASE_PATH` 覆盖），可部署到任意子目录；
+- `public/privacy.html` 为独立静态隐私说明页（`robots.txt` 不收录，页面自带 `noindex`），不参与 React 构建；
 - `robots.txt` / `sitemap.xml` / canonical / og:image 均指向 `www.pldduck.com`，部署到其他域名时请同步修改；
 - 备案号按访问域名自动切换（见 `config/site.config.json` 的 `footer.icpConfigs`），未匹配域名不展示备案号。
 
