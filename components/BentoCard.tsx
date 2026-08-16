@@ -13,8 +13,11 @@ type BentoCardProps = {
  * 仅带 onClick 时（如域名复制卡）视为按钮：补充 role / tabIndex / 键盘触发，保证可访问性。
  */
 export const BentoCard = ({ children, className = '', href, onClick }: BentoCardProps) => {
-  const Comp = href ? motion.a : motion.div;
-  const interactive = Boolean(onClick) && !href;
+  // 只把 http(s) 链接渲染为可跳转容器：url 来自 CMS 可编辑的配置，防御性拦截
+  // "javascript:..." 之类的危险 scheme（配合 CSP 纵深防御）。
+  const isSafeHref = href ? /^https?:\/\//i.test(href) : false;
+  const Comp = isSafeHref ? motion.a : motion.div;
+  const interactive = Boolean(onClick) && !isSafeHref;
 
   const keyboardProps = interactive
     ? {
@@ -32,9 +35,9 @@ export const BentoCard = ({ children, className = '', href, onClick }: BentoCard
 
   return (
     <Comp
-      href={href}
-      target={href ? '_blank' : undefined}
-      rel={href ? 'noopener noreferrer' : undefined}
+      href={isSafeHref ? href : undefined}
+      target={isSafeHref ? '_blank' : undefined}
+      rel={isSafeHref ? 'noopener noreferrer' : undefined}
       onClick={onClick}
       {...keyboardProps}
       whileHover={{ y: -4, scale: 1.01 }}
