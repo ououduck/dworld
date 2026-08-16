@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           # Pages CMS 触发时按 CMS 当前打开的分支检出（校验见下一步，仅允许 main）；
           # 手动触发（空 payload）时回退到触发分支。
