@@ -88,6 +88,7 @@ npm run preview      # 本地预览构建产物
 3. 编辑保存即推送仓库，点击侧边栏「🚀 部署到 Cloudflare & EdgeOne」按钮触发部署（见下）。
 
 > 说明：
+>
 > - CMS 的必填字段与 [`config/site.config.ts`](config/site.config.ts) 的类型约束保持一致（`npm run check` 在部署流水线中强制校验），CMS 能保存的配置一定可以通过类型检查；
 > - `sites` / `projects` 卡片中的图标取值为代码内置的 `IconMap`（Globe / Code2 / Disc / Server / Activity / Zap），新增图标需在 `App.tsx` 的 `IconMap` 中补充映射。
 
@@ -102,11 +103,11 @@ npm run preview      # 本地预览构建产物
 
 ### 仓库 Secrets（需在 GitHub 仓库 Settings → Secrets and variables 配置）
 
-| Secret | 用途 |
-| --- | --- |
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API Token（权限含 Pages: Edit） |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 账户 ID |
-| `EDGEONE_API_TOKEN` | EdgeOne API Token |
+| Secret                  | 用途                                       |
+| ----------------------- | ------------------------------------------ |
+| `CLOUDFLARE_API_TOKEN`  | Cloudflare API Token（权限含 Pages: Edit） |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 账户 ID                         |
+| `EDGEONE_API_TOKEN`     | EdgeOne API Token                          |
 
 ### 平台侧一次性准备
 
