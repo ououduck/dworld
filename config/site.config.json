@@ -3,14 +3,16 @@
     "name": "跑路的duck",
     "logo": "https://q1.qlogo.cn/g?b=qq&nk=2472652060&s=100",
     "description": "一只游手好闲的鸭子",
-    "tags": ["没实力", "爱跑路"],
+    "tags": [
+      "跑路啦"
+    ],
     "status": "online"
   },
   "identity": {
     "label": "助记词",
     "domain": "www.pldduck.com",
-    "memorySentence": "教你一句话记住本网站：",
-    "memoryDetail": "跑路的（pld）duck（duck）"
+    "memorySentence": "教你一句话记住本网站:",
+    "memoryDetail": "跑路的(pld)duck(duck)"
   },
   "socials": {
     "github": "https://github.com/ououduck",
@@ -27,14 +29,38 @@
       "max": 28
     },
     "items": [
-      { "text": "欢迎来到 D的世界", "color": "#facc15" },
-      { "text": "今天也要继续摸鱼写代码", "color": "#38bdf8" },
-      { "text": "pldduck.com", "color": "#c084fc" },
-      { "text": "pldduck.top", "color": "#fb7185" },
-      { "text": "AI就是我的命", "color": "#f97316" },
-      { "text": "记得天天开心", "color": "#60a5fa" },
-      { "text": "Duck要跑路啦", "color": "#a3e635" },
-      { "text": "保持热爱，继续折腾", "color": "#f472b6" }
+      {
+        "text": "欢迎来到 D的世界",
+        "color": "#facc15"
+      },
+      {
+        "text": "今天也要继续摸鱼写代码",
+        "color": "#38bdf8"
+      },
+      {
+        "text": "pldduck.com",
+        "color": "#c084fc"
+      },
+      {
+        "text": "pldduck.top",
+        "color": "#fb7185"
+      },
+      {
+        "text": "AI就是我的命",
+        "color": "#f97316"
+      },
+      {
+        "text": "记得天天开心",
+        "color": "#60a5fa"
+      },
+      {
+        "text": "Duck跑路啦",
+        "color": "#a3e635"
+      },
+      {
+        "text": "保持热爱，继续折腾",
+        "color": "#f472b6"
+      }
     ]
   },
   "sites": [
@@ -45,15 +71,23 @@
       "url": "https://blog.pldduck.com",
       "icon": "Globe",
       "color": "text-blue-400"
+    },
+    {
+      "title": "D-Tool",
+      "en": "Tool",
+      "desc": "D-Tool 在线工具箱",
+      "url": "https://tool.pldduck.com",
+      "icon": "Code2",
+      "color": "text-green-400"
     }
   ],
   "projects": [
     {
-      "title": "D-fuckshuiyin",
-      "desc": "智能图片去水印工具",
-      "url": "https://github.com/ououduck/D-fuckshuiyin",
+      "title": "D-blog",
+      "desc": "纯静态自研Blog",
+      "url": "https://github.com/ououduck/D-blog/",
       "icon": "Code2",
-      "tag": "JS+Canvas"
+      "tag": "React+Vite"
     },
     {
       "title": "Dynamic Island",
@@ -63,23 +97,16 @@
       "tag": "CSS+React"
     },
     {
-      "title": "D-pxxdns-index",
-      "desc": "为PXXDNS定制的企业级首页模板",
-      "url": "https://github.com/ououduck/D-pxxdns-index/",
+      "title": "D-fuckshuiyin",
+      "desc": "智能图片去水印工具",
+      "url": "https://github.com/ououduck/D-fuckshuiyin",
       "icon": "Code2",
-      "tag": "PHP"
-    },
-    {
-      "title": "D-blog",
-      "desc": "纯静态自研Blog",
-      "url": "https://github.com/ououduck/D-blog/",
-      "icon": "Code2",
-      "tag": "React+Vite"
+      "tag": "JS+Canvas"
     }
   ],
   "footer": {
     "copyright": "© 2026 PLDDUCK",
-    "defaultIcp": "",
+    "defaultIcp": "湘ICP备2025101669号-3",
     "defaultIcpUrl": "https://beian.miit.gov.cn",
     "icpConfigs": [
       {
