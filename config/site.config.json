@@ -90,6 +90,13 @@
       "tag": "React+Vite"
     },
     {
+      "title": "D-Tool",
+      "desc": "纯前端在线工具箱",
+      "url": "https://github.com/ououduck/D-Tool",
+      "icon": "Code2",
+      "tag": "Node"
+    },
+    {
       "title": "Dynamic Island",
       "desc": "灵动岛音乐播放组件",
       "url": "https://github.com/ououduck/dynamic-island-player",
