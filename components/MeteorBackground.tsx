@@ -29,8 +29,8 @@ export const MeteorBackground = ({ number = 15 }: { number?: number }) => {
         <span
           key={`meteor-${idx}`}
           className={
-            'animate-meteor absolute h-0.5 w-0.5 rounded-[9999px] bg-slate-500 shadow-[0_0_0_1px_#ffffff10] rotate-[215deg] ' +
-            "before:content-[''] before:absolute before:top-1/2 before:transform before:-translate-y-[50%] before:w-[50px] before:h-[1px] before:bg-gradient-to-r before:from-[#64748b] before:to-transparent"
+            'animate-meteor absolute h-0.5 w-0.5 rotate-[215deg] rounded-[9999px] bg-zinc-300 dark:bg-zinc-600 ' +
+            "before:content-[''] before:absolute before:top-1/2 before:transform before:-translate-y-[50%] before:w-[50px] before:h-[1px] before:bg-gradient-to-r before:from-zinc-400 dark:before:from-zinc-500 before:to-transparent"
           }
           style={{
             top: 0,

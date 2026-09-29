@@ -11,6 +11,8 @@ export const LOADING_SKIP_KEY = 'dworld-loading-skipped';
  * - 同一会话内二次访问直接跳过（sessionStorage 标记，判断已前移到 App 的 loading 初始值，
  *   本组件被渲染时一定是首次访问，不会播放一次无意义的退出动画）；
  * - 系统开启「减少动态效果」时不做逐帧进度，直接加速完成。
+ * - 配色沿用 D-blog 的编辑部语言：纸面/void 底、zinc 进度槽、反相主色进度条
+ *   （浅色深条、深色浅条），品牌字 ZCOOL KuaiLe 仅用于百分比数字这一处个性位。
  */
 export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [percent, setPercent] = useState(0);
@@ -52,37 +54,29 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[100] bg-[#050505] flex flex-col items-center justify-center overflow-hidden"
-      exit={{ opacity: 0, scale: 1.1, filter: 'blur(20px)' }}
-      transition={{ duration: reducedMotion ? 0.15 : 0.8, ease: 'circOut' }}
+      className="fixed inset-0 z-modal flex flex-col items-center justify-center overflow-hidden bg-paper dark:bg-void"
+      exit={{ opacity: 0, scale: 1.04 }}
+      transition={{ duration: reducedMotion ? 0.15 : 0.4, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="relative mb-12">
+      <div className="mb-10">
         {!reducedMotion && (
           <motion.div
             animate={{ x: [-15, 15, -15], rotate: [-8, 8, -8], y: [0, -12, 0] }}
             transition={{ repeat: Infinity, duration: 0.35, ease: 'linear' }}
-            className="w-24 h-24"
+            className="h-24 w-24"
           >
-            <PixelDuckSvg className="w-full h-full drop-shadow-[0_0_30px_rgba(252,211,77,0.6)]" />
+            <PixelDuckSvg className="h-full w-full" />
           </motion.div>
         )}
         {reducedMotion && (
-          <div className="w-24 h-24">
-            <PixelDuckSvg className="w-full h-full drop-shadow-[0_0_30px_rgba(252,211,77,0.6)]" />
+          <div className="h-24 w-24">
+            <PixelDuckSvg className="h-full w-full" />
           </div>
-        )}
-
-        {!reducedMotion && (
-          <motion.div
-            animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5], x: [20, 40, 60] }}
-            transition={{ repeat: Infinity, duration: 0.35 }}
-            className="absolute -bottom-2 -left-4 w-4 h-2 bg-white/20 rounded-full blur-sm"
-          />
         )}
       </div>
 
       <div
-        className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mb-4"
+        className="mb-4 h-1 w-48 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
@@ -90,7 +84,7 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
         aria-label="页面加载进度"
       >
         <motion.div
-          className="h-full bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.5)]"
+          className="h-full bg-zinc-900 dark:bg-zinc-100"
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
         />
@@ -101,15 +95,11 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
         animate={{ opacity: 1 }}
         className="flex flex-col items-center gap-2"
       >
-        <span className="text-white/40 font-mono text-[10px] tracking-widest uppercase">
+        <span className="eyebrow font-mono normal-case tracking-[0.2em] text-zinc-400 dark:text-zinc-500">
           欢迎来到D的世界...
         </span>
-        <span className="text-yellow-400 font-brand text-xl">{percent}%</span>
+        <span className="font-brand text-xl text-zinc-900 dark:text-zinc-50">{percent}%</span>
       </motion.div>
-
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-yellow-500/5 rounded-full blur-[120px]" />
-      </div>
     </motion.div>
   );
 };

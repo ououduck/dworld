@@ -89,19 +89,13 @@ content:
             options:
               values: ['Globe', 'Code2', 'Disc', 'Server', 'Activity', 'Zap']
           - name: color
-            label: 图标颜色
+            label: 图标配色
             type: select
             required: true
             options:
-              values:
-                [
-                  'text-blue-400',
-                  'text-purple-400',
-                  'text-green-400',
-                  'text-yellow-400',
-                  'text-pink-400',
-                  'text-cyan-400',
-                ]
+              # 语义 key（非 Tailwind 类名）：实际明暗类名对由 App.tsx 的 ACCENT_CLASS 维护，
+              # CMS 侧新增取值必须同步该映射，否则回退为中性灰。
+              values: ['sky', 'emerald', 'violet', 'amber', 'rose', 'cyan']
 
       - name: projects
         label: 跳转卡片 · 开源项目

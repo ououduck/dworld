@@ -97,8 +97,9 @@ const RoamingDuck = () => {
     <motion.div
       animate={controls}
       // w-12 sm:w-16：窄屏缩小鸭子尺寸，避免其超出视口或遮挡内容；
-      // bottom 用 safe-area 兜底，避免 iPhone 底部横条压住鸭子。
-      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-0 z-[40] pointer-events-none w-12 sm:w-16"
+      // bottom / left 用 safe-area 兜底：底部避开 iPhone 横条，左侧留白避免
+      // 鸭子不漫游（触屏、减少动态效果）时紧贴视口边缘。
+      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-[max(0.75rem,env(safe-area-inset-left))] z-[40] pointer-events-none w-12 sm:w-16"
     >
       <div
         role="button"
@@ -112,25 +113,25 @@ const RoamingDuck = () => {
           }
         }}
         onClick={handleClick}
-        className="relative pointer-events-auto cursor-pointer focus:outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-yellow-400/60"
+        className="relative pointer-events-auto cursor-pointer focus:outline-none focus-visible:rounded-icon focus-visible:ring-2 focus-visible:ring-zinc-500/60"
       >
         <AnimatePresence>
           {speech && (
             <div className="absolute -top-8 left-1/2 -translate-x-1/2">
               <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: -8 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="relative bg-white/10 backdrop-blur-xl px-4 py-1.5 rounded-2xl border border-white/20 text-xs font-medium whitespace-nowrap shadow-2xl"
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="editorial-overlay relative px-4 py-1.5 text-xs font-medium whitespace-nowrap shadow-xl shadow-black/10 dark:shadow-black/30"
               >
-                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white/10" />
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-paper dark:border-t-zinc-900" />
                 {speech}
               </motion.div>
             </div>
           )}
         </AnimatePresence>
         <div style={{ transform: direction === 'right' ? 'scaleX(-1)' : 'scaleX(1)' }}>
-          <PixelDuckSvg className="w-12 h-12 sm:w-16 sm:h-16 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]" />
+          <PixelDuckSvg className="h-12 w-12 sm:h-16 sm:w-16" />
         </div>
       </div>
     </motion.div>

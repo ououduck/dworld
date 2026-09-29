@@ -17,6 +17,7 @@ import { motion, AnimatePresence, MotionConfig, Variants } from 'framer-motion';
 import { MeteorBackground } from './components/MeteorBackground';
 import { BentoCard } from './components/BentoCard';
 import { LoadingScreen, LOADING_SKIP_KEY } from './components/LoadingScreen';
+import { ThemeToggle } from './components/ThemeToggle';
 import { SITE_CONFIG } from './config';
 import { QQIcon, PixelDuckSvg } from './components/Icons';
 
@@ -41,6 +42,25 @@ const IconMap: Record<string, React.ReactNode> = {
 };
 
 const FALLBACK_ICON = <Command size={18} />;
+
+/**
+ * 跳转卡片图标配色：CMS 存语义 key，这里映射为成对的明暗类名。
+ * 类名以字面量形式存在于源码中，Tailwind 构建期可直接扫描收集，
+ * 不再需要把 Tailwind 类名暴露给 CMS、也不必维护 safelist。
+ * 新增配色 = 在此加一行 + 在 .pages.yml 的 options 里加同名 key。
+ */
+const ACCENT_CLASS: Record<string, string> = {
+  sky: 'text-sky-600 dark:text-sky-400',
+  emerald: 'text-emerald-600 dark:text-emerald-400',
+  violet: 'text-violet-600 dark:text-violet-400',
+  amber: 'text-amber-600 dark:text-amber-400',
+  rose: 'text-rose-600 dark:text-rose-400',
+  cyan: 'text-cyan-600 dark:text-cyan-400',
+};
+
+const NEUTRAL_ACCENT = 'text-zinc-500 dark:text-zinc-400';
+
+const iconAccent = (color: string) => ACCENT_CLASS[color] ?? NEUTRAL_ACCENT;
 
 const App: React.FC = () => {
   // 同会话二次访问直接跳过加载屏：初始值在首帧渲染前判断，避免
@@ -111,17 +131,18 @@ const App: React.FC = () => {
 
   // 通过容器级交错动画统一管理各区块的入场节奏，避免逐个元素手动配置。
   const stagger: Variants = {
-    visible: { transition: { staggerChildren: 0.1 } },
+    visible: { transition: { staggerChildren: 0.07 } },
   };
 
+  // 位移与时长收敛到 D-blog 的量级：编辑部式排版靠克制的淡入，不做弹跳。
   const fadeInUp: Variants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 12 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.8,
-        ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+        duration: 0.45,
+        ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
       },
     },
   };
@@ -152,7 +173,7 @@ const App: React.FC = () => {
     // framer-motion 的 JS 驱动动画（如在线状态点脉冲）自动停用，
     // 与弹幕 / 鸭子等组件各自的显式处理保持一致。
     <MotionConfig reducedMotion="user">
-      <div className="min-h-screen bg-[#050505] text-white selection:bg-yellow-400 selection:text-black">
+      <div className="min-h-screen">
         {/* 启动页先独占视图，避免首屏内容与入场动画同时出现造成视觉干扰。 */}
         <AnimatePresence mode="wait">
           {loading && <LoadingScreen key="loading" onComplete={handleLoadingComplete} />}
@@ -172,18 +193,32 @@ const App: React.FC = () => {
               variants={stagger}
               initial="hidden"
               animate="visible"
-              className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-32 space-y-12"
+              className="relative z-10 mx-auto max-w-page px-6 pb-16"
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* 顶栏：与 D-blog 导航同层（发丝下边框 + 右侧 44px 主题按钮） */}
+              <motion.header
+                variants={fadeInUp}
+                className="flex items-center justify-between border-b border-zinc-200/90 py-6 dark:border-zinc-800/90"
+              >
+                <div className="flex items-center gap-3">
+                  <PixelDuckSvg className="h-5 w-5" />
+                  <span className="font-serif text-base font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                    {SITE_CONFIG.identity.domain}
+                  </span>
+                </div>
+                <ThemeToggle />
+              </motion.header>
+
+              <div className="grid grid-cols-1 gap-6 py-12 md:grid-cols-3 md:py-16">
                 <motion.div variants={fadeInUp} className="md:col-span-2">
-                  <BentoCard className="p-10 md:p-14 flex flex-col md:flex-row items-center gap-10">
-                    <div className="relative group/avatar">
-                      <div className="w-32 h-32 rounded-[2.5rem] border-2 border-white/10 overflow-hidden ring-8 ring-white/[0.02] transform transition-transform group-hover/avatar:scale-105 duration-500">
+                  <BentoCard className="flex flex-col items-center gap-8 p-8 md:flex-row md:p-10">
+                    <div className="relative">
+                      <div className="h-32 w-32 overflow-hidden rounded-icon border border-zinc-200 dark:border-zinc-800">
                         {/* 外部头像源偶尔不稳定，这里回退到占位图以保证卡片始终完整；只回退一次防止 onError 循环。
                             首屏关键图保持默认 eager 加载，仅开启异步解码避免阻塞渲染。 */}
                         <img
                           src={SITE_CONFIG.profile.logo}
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                           alt="跑路的duck 头像"
                           // 容器固定 128px，width/height 声明与之一致，配合 decoding/fetchPriority 减少 CLS 与解码阻塞。
                           width={128}
@@ -203,29 +238,34 @@ const App: React.FC = () => {
                           }}
                         />
                       </div>
-                      <motion.div
+                      <motion.span
                         animate={{ scale: [1, 1.2, 1] }}
                         transition={{ repeat: Infinity, duration: 2 }}
-                        className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-[#0A0A0A] ${SITE_CONFIG.profile.status === 'online' ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]' : 'bg-gray-500'}`}
+                        className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white dark:border-zinc-900 ${
+                          SITE_CONFIG.profile.status === 'online' ? 'bg-emerald-500' : 'bg-zinc-400'
+                        }`}
+                        aria-hidden="true"
                       />
                     </div>
-                    <div className="text-center md:text-left space-y-4">
-                      <div className="flex items-center justify-center md:justify-start gap-4">
-                        <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
+
+                    <div className="space-y-4 text-center md:text-left">
+                      <div className="flex items-center justify-center gap-3 md:justify-start">
+                        <h1 className="font-serif text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 md:text-5xl">
                           {SITE_CONFIG.profile.name}
                         </h1>
-                        <div className="bg-blue-500/10 p-1.5 rounded-full border border-blue-500/20">
-                          <Check size={20} className="text-blue-400" />
-                        </div>
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-zinc-200 text-[#0969da] dark:border-zinc-800 dark:text-[#58a6ff]">
+                          <Check size={14} />
+                          <span className="sr-only">已认证</span>
+                        </span>
                       </div>
-                      <p className="text-white/40 text-xl font-medium tracking-wide">
+                      <p className="text-base leading-relaxed text-zinc-500 dark:text-zinc-400 md:text-lg">
                         {SITE_CONFIG.profile.description}
                       </p>
-                      <div className="flex flex-wrap justify-center md:justify-start gap-2.5 pt-2">
+                      <div className="flex flex-wrap justify-center gap-2 pt-1 md:justify-start">
                         {SITE_CONFIG.profile.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="text-[10px] font-mono font-bold border border-white/10 px-3 py-1 rounded-full bg-white/[0.03] text-white/60 hover:bg-white/10 transition-colors cursor-default"
+                            className="inline-flex items-center rounded-micro border border-zinc-300 bg-zinc-100 px-2 py-0.5 text-[11px] font-medium leading-none text-zinc-600 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
                           >
                             {tag}
                           </span>
@@ -237,32 +277,30 @@ const App: React.FC = () => {
 
                 <motion.div variants={fadeInUp}>
                   <BentoCard
-                    className="h-full p-10 flex flex-col justify-between"
+                    className="flex h-full flex-col justify-between p-8"
                     onClick={() => handleCopy(SITE_CONFIG.identity.domain, '站点域名')}
                   >
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1.5">
-                        <span className="text-[10px] font-mono text-white/30 uppercase tracking-[0.3em] block">
-                          Domain Address
-                        </span>
-                        <span className="inline-flex items-center text-[10px] text-yellow-500/90 font-bold px-3 py-1 bg-yellow-500/10 rounded-full border border-yellow-500/20">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-2">
+                        <span className="eyebrow block">Domain Address</span>
+                        <span className="inline-flex items-center rounded-micro border border-zinc-300 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:border-zinc-600 dark:text-zinc-400">
                           {SITE_CONFIG.identity.label}
                         </span>
                       </div>
                       <Copy
                         size={18}
-                        className="text-white/10 group-hover:text-yellow-400 transition-colors"
+                        className="text-zinc-400 transition-colors group-hover:text-zinc-700 dark:text-zinc-500 dark:group-hover:text-zinc-200"
                       />
                     </div>
-                    <div className="space-y-4">
-                      <p className="text-[11px] text-white/30 font-mono leading-relaxed">
+                    <div className="space-y-3 pt-6">
+                      <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
                         {SITE_CONFIG.identity.memorySentence}
                         <br />
-                        <span className="text-white/60 font-medium">
+                        <span className="font-medium text-zinc-700 dark:text-zinc-200">
                           {SITE_CONFIG.identity.memoryDetail}
                         </span>
                       </p>
-                      <div className="text-2xl font-mono font-bold text-white/90 group-hover:text-yellow-400 transition-colors tracking-tight">
+                      <div className="break-all font-mono text-xl font-bold tracking-tight text-zinc-900 transition-colors group-hover:text-black dark:text-zinc-50 dark:group-hover:text-white">
                         {SITE_CONFIG.identity.domain}
                       </div>
                     </div>
@@ -273,7 +311,7 @@ const App: React.FC = () => {
               {/* 联系方式保留一行横向排布，便于快速复制或跳转，不挤占首屏纵向空间。 */}
               <motion.div
                 variants={fadeInUp}
-                className="flex flex-wrap justify-center md:justify-start gap-4"
+                className="flex flex-wrap justify-center gap-3 md:justify-start"
               >
                 <a
                   href={SITE_CONFIG.socials.github}
@@ -289,7 +327,7 @@ const App: React.FC = () => {
                   onClick={() => handleCopy(SITE_CONFIG.socials.qq, 'QQ')}
                   className="social-btn group"
                 >
-                  <QQIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <QQIcon className="h-4 w-4 group-hover:scale-110 transition-transform" />
                   <span>QQ</span>
                 </button>
                 <a href={`mailto:${SITE_CONFIG.socials.email}`} className="social-btn group">
@@ -298,71 +336,77 @@ const App: React.FC = () => {
                 </a>
               </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8">
+              <div className="grid grid-cols-1 gap-10 pt-12 md:grid-cols-2 md:pt-16">
                 {/* 两列内容共享同一布局规则，新增站点或项目时能继续保持信息密度平衡。 */}
-                <motion.section variants={fadeInUp} className="space-y-6">
-                  <div className="flex items-center gap-4 px-4">
-                    <div className="w-8 h-px bg-white/20" />
-                    <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">
-                      我的站点
-                    </h2>
+                <motion.section variants={fadeInUp} className="space-y-4">
+                  <div className="flex items-center gap-3 px-1">
+                    <span className="eyebrow">我的站点</span>
+                    <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {SITE_CONFIG.sites.map((site) => (
                       <BentoCard
                         key={site.title}
                         href={site.url}
-                        className="p-6 flex items-center justify-between group"
+                        className="flex items-center justify-between gap-4 p-5"
                       >
-                        <div className="flex items-center gap-6">
+                        <div className="flex min-w-0 items-center gap-4">
                           <div
-                            className={`p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] transform transition-transform group-hover:scale-110 duration-500 ${site.color}`}
+                            className={`flex h-11 w-11 flex-none items-center justify-center rounded-icon border border-zinc-200 bg-zinc-100/70 dark:border-zinc-800 dark:bg-zinc-800/70 ${iconAccent(site.color)}`}
                           >
                             {IconMap[site.icon] ?? FALLBACK_ICON}
                           </div>
-                          <div>
-                            <div className="flex items-center gap-3">
-                              <h3 className="text-base font-bold text-white/90">{site.title}</h3>
-                              <span className="text-[9px] font-mono font-bold text-white/20 px-1.5 py-0.5 border border-white/5 rounded-md">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h3 className="truncate text-sm font-semibold text-zinc-800 group-hover:text-black dark:text-zinc-200 dark:group-hover:text-white">
+                                {site.title}
+                              </h3>
+                              <span className="eyebrow flex-none normal-case tracking-normal">
                                 {site.en}
                               </span>
                             </div>
-                            <p className="text-sm text-white/40 mt-1.5 line-clamp-1">{site.desc}</p>
+                            <p className="mt-0.5 line-clamp-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                              {site.desc}
+                            </p>
                           </div>
                         </div>
                         <ArrowUpRight
-                          size={20}
-                          className="text-white/5 group-hover:text-white/80 transition-all group-hover:translate-x-1 group-hover:-translate-y-1"
+                          size={18}
+                          className="flex-none text-zinc-400 transition-colors group-hover:text-zinc-700 dark:group-hover:text-zinc-200"
                         />
                       </BentoCard>
                     ))}
                   </div>
                 </motion.section>
 
-                <motion.section variants={fadeInUp} className="space-y-6">
-                  <div className="flex items-center gap-4 px-4">
-                    <div className="w-8 h-px bg-white/20" />
-                    <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">
-                      开源项目
-                    </h2>
+                <motion.section variants={fadeInUp} className="space-y-4">
+                  <div className="flex items-center gap-3 px-1">
+                    <span className="eyebrow">开源项目</span>
+                    <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {SITE_CONFIG.projects.map((proj) => (
                       <BentoCard
                         key={proj.title}
                         href={proj.url}
-                        className="p-6 flex items-center justify-between group"
+                        className="flex items-center justify-between gap-4 p-5"
                       >
-                        <div className="flex items-center gap-6">
-                          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-purple-400 group-hover:text-purple-300 transition-colors">
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div
+                            className={`flex h-11 w-11 flex-none items-center justify-center rounded-icon border border-zinc-200 bg-zinc-100/70 dark:border-zinc-800 dark:bg-zinc-800/70 ${NEUTRAL_ACCENT}`}
+                          >
                             {IconMap[proj.icon] ?? FALLBACK_ICON}
                           </div>
-                          <div>
-                            <h3 className="text-base font-bold text-white/90">{proj.title}</h3>
-                            <p className="text-sm text-white/40 mt-1.5 line-clamp-1">{proj.desc}</p>
+                          <div className="min-w-0">
+                            <h3 className="truncate text-sm font-semibold text-zinc-800 group-hover:text-black dark:text-zinc-200 dark:group-hover:text-white">
+                              {proj.title}
+                            </h3>
+                            <p className="mt-0.5 line-clamp-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                              {proj.desc}
+                            </p>
                           </div>
                         </div>
-                        <span className="text-[9px] font-mono font-bold text-purple-400/50 bg-purple-400/5 px-2.5 py-1.5 rounded-lg border border-purple-400/10">
+                        <span className="flex-none rounded-micro border border-zinc-300 bg-zinc-100 px-1.5 py-0.5 font-mono text-[11px] leading-none text-zinc-600 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
                           {proj.tag}
                         </span>
                       </BentoCard>
@@ -374,30 +418,26 @@ const App: React.FC = () => {
               {/* 页脚保留极简视觉收尾，仅在存在备案信息时输出链接以兼顾不同部署域名。 */}
               <motion.footer
                 variants={fadeInUp}
-                className="pt-32 pb-16 flex flex-col items-center gap-8"
+                className="site-footer mt-16 flex flex-col items-center gap-4 border-t border-zinc-200/90 pt-10 text-center dark:border-zinc-800/90"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-px bg-gradient-to-r from-transparent to-white/10" />
-                  <PixelDuckSvg className="w-6 h-6 opacity-20 grayscale hover:grayscale-0 hover:opacity-100 transition-all" />
-                  <div className="w-12 h-px bg-gradient-to-l from-transparent to-white/10" />
-                </div>
-                <div className="text-center space-y-3">
-                  <p className="text-[10px] font-mono font-medium tracking-[0.2em] text-white/20 uppercase">
-                    {SITE_CONFIG.footer.copyright}
-                  </p>
+                <PixelDuckSvg className="h-5 w-5 opacity-40 grayscale transition-all hover:opacity-100 hover:grayscale-0" />
+                <p className="font-mono text-[11px] tracking-wide text-zinc-400 uppercase dark:text-zinc-500">
+                  {SITE_CONFIG.footer.copyright}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
                   {displayIcp && (
                     <a
                       href={displayIcpUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-[10px] font-mono text-white/10 hover:text-white/40 transition-colors block"
+                      className="font-mono text-[11px] text-zinc-400 transition-colors hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200"
                     >
                       {displayIcp}
                     </a>
                   )}
                   <a
                     href="./privacy.html"
-                    className="text-[10px] font-mono text-white/10 hover:text-white/40 transition-colors block"
+                    className="font-mono text-[11px] text-zinc-400 transition-colors hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200"
                   >
                     隐私说明
                   </a>
@@ -411,15 +451,16 @@ const App: React.FC = () => {
         <AnimatePresence>
           {toast && (
             <motion.div
-              initial={{ y: 50, opacity: 0, scale: 0.9 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: 20, opacity: 0, scale: 0.9 }}
+              initial={{ y: 16, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 8, opacity: 0 }}
+              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
               role="status"
               aria-live="polite"
-              className="fixed bottom-[max(3rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[200] px-8 py-4 bg-[#111]/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-4"
+              className="editorial-overlay fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 z-nested flex -translate-x-1/2 items-center gap-3 px-4 py-3 shadow-xl shadow-black/10 dark:shadow-black/30"
             >
-              <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]" />
-              <span className="text-xs font-bold tracking-wide">{toast}</span>
+              <span className="h-2 w-2 flex-none rounded-full bg-emerald-500" aria-hidden="true" />
+              <span className="text-xs font-medium">{toast}</span>
             </motion.div>
           )}
         </AnimatePresence>

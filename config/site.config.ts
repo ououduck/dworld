@@ -55,7 +55,11 @@ export interface SiteBarrage {
   items: BarrageItem[];
 }
 
-/** 「我的站点」跳转卡片。icon 取值见 App.tsx 的 IconMap，color 为 Tailwind 文本颜色类。 */
+/**
+ * 「我的站点」跳转卡片。icon 取值见 App.tsx 的 IconMap；
+ * color 为语义配色 key（sky / emerald / violet / amber / rose / cyan），
+ * 实际类名映射见 App.tsx 的 ACCENT_CLASS，未知 key 回退中性灰。
+ */
 export interface SiteCardItem {
   title: string;
   en: string;

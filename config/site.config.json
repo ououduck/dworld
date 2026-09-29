@@ -70,7 +70,7 @@
       "desc": "跑路的duck的技术分享和生活随笔",
       "url": "https://blog.pldduck.com",
       "icon": "Globe",
-      "color": "text-blue-400"
+      "color": "sky"
     },
     {
       "title": "D-Tool",
@@ -78,7 +78,7 @@
       "desc": "D-Tool 在线工具箱",
       "url": "https://tool.pldduck.com",
       "icon": "Code2",
-      "color": "text-green-400"
+      "color": "emerald"
     }
   ],
   "projects": [

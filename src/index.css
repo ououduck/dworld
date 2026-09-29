@@ -1,104 +1,176 @@
 /* ============================================================
- * DWorld 全局样式（Tailwind 构建期编译入口）
- * - 通过 @tailwind 指令引入 base（preflight 重置）/ components / utilities
- * - 站点自定义类集中在此维护，避免散落在 JSX 内联 <style> 中
+ * D 的世界 全局样式
+ *
+ * 与 D-blog（blog.pldduck.com）共用同一套设计语言：
+ * - 浅色为默认（body 用 paper/ink），`html.dark` 覆盖为 void/zinc；
+ * - 表面只靠 1px 发丝边框区分层级，不用投影（shadow-none 是刻意的）；
+ * - 交互态统一 150ms 色彩过渡，按压 active:scale-[.98]；
+ * - editorial-* 类名沿用 D-blog，同名类在两站表现一致。
  * ============================================================ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ---------- 基础 ---------- */
-
-html {
-  /* 声明深色原生控件配色，避免移动端表单 / 滚动条出现白闪 */
-  color-scheme: dark;
-}
-
-body {
-  background-color: #050505;
-  color: #ffffff;
-  /* 与 index.html 的字体异步加载策略配合：字体加载完成前回退到系统字体 */
-  font-family: 'Inter', sans-serif;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  /* 移动端点按反馈：去掉默认灰色高亮，避免与自定义 hover 效果叠加 */
-  -webkit-tap-highlight-color: transparent;
-  /* 阻止下拉刷新 / 回弹与页面滚动冲突（站点本身不滚动溢出） */
-  overscroll-behavior-y: none;
-}
-
-#root {
-  /* dvh 优先、vh 兜底：移动端动态工具栏收起/展开时避免布局跳动 */
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-
-/* ---------- 固定背景噪点层 ---------- */
-
-.bg-noise {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.04;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-}
-
-/* ---------- 社交按钮 ---------- */
-
-.social-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 56px;
-  padding: 0 28px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
-  /* 按压缩放用短过渡（0.12s），悬停/颜色/阴影等保持 0.4s 长过渡 */
-  transition:
-    transform 0.12s cubic-bezier(0.16, 1, 0.3, 1),
-    background 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* 点按反馈：全局去掉了 tap-highlight，这里用 :active 缩放补偿触屏点击手感。
-   注意：本规则必须位于 hover 媒体查询块之前，否则同优先级下后者（hover 版）
-   会覆盖普通版；hover 设备由下方媒体查询内的规则接管。 */
-.social-btn:active {
-  transform: scale(0.97);
-}
-
-/* 仅在有 hover 能力的设备（非触摸屏）上应用悬停效果，避免移动端点击后样式“粘住” */
-@media (hover: hover) {
-  .social-btn:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.15);
-    color: #fff;
-    transform: translateY(-4px);
-    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* 声明明暗双模态，让 UA 组件（滚动条/表单/默认 canvas）在 CSS 生效前即适配 */
+    color-scheme: light;
+    scrollbar-gutter: stable;
   }
 
-  /* 按下时保留悬停位移再叠加缩放，避免 transform 互相覆盖导致按钮“跳起” */
-  .social-btn:active {
-    transform: translateY(-4px) scale(0.97);
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-paper text-ink;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    /* 移动端点按反馈：去掉默认灰色高亮，改由自定义 :active 缩放补偿 */
+    -webkit-tap-highlight-color: transparent;
+    /* 站点本身不滚动溢出，阻止下拉刷新/回弹与页面滚动冲突 */
+    overscroll-behavior-y: none;
+  }
+
+  html.dark body {
+    @apply bg-void text-zinc-100;
+  }
+
+  #root {
+    /* dvh 优先、vh 兜底：移动端动态工具栏收起/展开时避免布局跳动 */
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* 中性焦点态：与 D-blog 一致，不依赖主题色 */
+  :focus-visible {
+    outline: 2px solid #3f3f46;
+    outline-offset: 3px;
+  }
+
+  html.dark :focus-visible {
+    outline-color: #d4d4d8;
+  }
+
+  ::selection {
+    background: rgba(82, 82, 91, 0.22);
+    color: #18181b;
+  }
+
+  .dark ::selection {
+    background: rgba(212, 212, 216, 0.28);
+    color: #fafafa;
+  }
+
+  /* 滚动条：与 D-blog 同色同尺寸 */
+  * {
+    scrollbar-color: rgba(168, 162, 158, 0.55) transparent;
+  }
+
+  .dark * {
+    scrollbar-color: rgba(82, 82, 91, 0.7) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(168, 162, 158, 0.58), rgba(120, 113, 108, 0.48));
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(120, 113, 108, 0.78), rgba(87, 83, 78, 0.7));
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(82, 82, 91, 0.72), rgba(63, 63, 70, 0.62));
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(113, 113, 122, 0.86), rgba(82, 82, 91, 0.8));
   }
 }
 
-/* ---------- 减少动态效果 ---------- */
+@layer components {
+  /* ---------- 表面容器（与 D-blog 的 .editorial-* 同名同形） ---------- */
 
-/* 系统开启「减少动态效果」时，停用所有 CSS 动画与过渡；流星雨为纯装饰，直接隐藏 */
+  .editorial-surface {
+    @apply rounded-surface border border-zinc-300 bg-paper shadow-none transition-[border-color,background-color] duration-150 dark:border-zinc-700 dark:bg-zinc-900;
+  }
+
+  .editorial-overlay {
+    @apply rounded-overlay border border-zinc-300 bg-paper shadow-none dark:border-zinc-700 dark:bg-zinc-900;
+  }
+
+  .editorial-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-zinc-300 bg-paper px-4 py-2.5 text-sm font-semibold text-zinc-700 shadow-none transition-[background-color,border-color,color,opacity,transform] duration-150 hover:border-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 active:scale-[.98] active:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700;
+  }
+
+  /* ---------- 社交/链接按钮：D 的世界原有 .social-btn 保留类名，观感改为编辑部式 ---------- */
+
+  .social-btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-3 rounded-control border border-zinc-300 bg-paper px-5 text-sm font-semibold text-zinc-700 shadow-none transition-[background-color,border-color,color,transform] duration-150 hover:border-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 active:scale-[.98] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-white;
+  }
+
+  /* ---------- 弹幕胶囊：扁平化，颜色只作用于文字与发丝边框 ---------- */
+
+  .barrage-pill {
+    @apply inline-flex items-center rounded-control border px-3 py-1.5 text-xs font-semibold tracking-wide dark:rounded-control;
+    /* --pill 由 JS 按条目内联注入；浅色下压暗、深色下提亮，保证两种主题都够对比度 */
+    color: color-mix(in oklab, var(--pill) 62%, #1c1917);
+    border-color: color-mix(in oklab, var(--pill) 45%, #d4d4d8);
+    background-color: color-mix(in oklab, var(--pill) 9%, #f2f0e9);
+  }
+
+  .dark .barrage-pill {
+    color: color-mix(in oklab, var(--pill) 85%, #fafafa);
+    border-color: color-mix(in oklab, var(--pill) 40%, #3f3f46);
+    background-color: color-mix(in oklab, var(--pill) 14%, #18181b);
+  }
+
+  /* ---------- 装饰层 ---------- */
+
+  .bg-noise {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 0;
+    pointer-events: none;
+    /* 纸面底色上的噪点必须比纯黑底更轻，否则奶油底会发灰 */
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+
+  .dark .bg-noise {
+    opacity: 0.04;
+  }
+}
+
+@layer utilities {
+  /* 小标题 / 元信息字距：与 D-blog 卡片 meta 同规格（0.12em、semibold、zinc-400） */
+  .eyebrow {
+    @apply text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-400 dark:text-zinc-500;
+  }
+}
+
+/* ---------- 减弱动效 ---------- */
+
+/* 系统开启「减少动态效果」时停用 CSS 动画与过渡；流星为纯装饰，直接隐藏 */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -110,5 +182,15 @@ body {
 
   .animate-meteor {
     display: none;
+  }
+}
+
+/* 触屏设备禁用按压缩放：:active 在点按瞬间触发缩放会闪烁，
+   观感廉价；仅桌面悬停设备保留按压反馈（与 D-blog 同一处理）。 */
+@media (hover: none) {
+  button:active,
+  a:active,
+  [role='button']:active {
+    transform: none !important;
   }
 }

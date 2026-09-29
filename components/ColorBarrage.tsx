@@ -153,7 +153,9 @@ const ColorBarrage = () => {
   }
 
   return (
-    <div className="fixed inset-0 z-[30] overflow-hidden pointer-events-none" aria-hidden="true">
+    // z-[5] 低于主内容（main 为 z-10）：弹幕只作背景层，从卡片后方穿过，
+    // 避免药丸文字压在标题/正文上影响可读性。
+    <div className="fixed inset-0 z-[5] overflow-hidden pointer-events-none" aria-hidden="true">
       {barrageTracks.map((track) => (
         <motion.div
           key={track.id}
@@ -169,23 +171,24 @@ const ColorBarrage = () => {
             repeatType: 'loop',
           }}
         >
-          {/* 胶囊背景已近不透明，去掉 backdrop-blur 可显著降低移动端持续滚动的重绘开销 */}
+          {/* 扁平胶囊：装饰色只作用于文字、发丝边框与微底色（见 .barrage-pill）。
+              明暗各有一套 color-mix 推导 —— 深色提亮、浅色压暗，
+              避免原深色荧光字直接落在奶油纸面上不可读。 */}
           <span
-            className="inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold tracking-wide shadow-[0_10px_30px_rgba(0,0,0,0.35)] sm:px-4 sm:py-2 sm:text-sm"
-            style={{
-              color: track.color,
-              borderColor: `${track.color}55`,
-              background: `linear-gradient(135deg, ${track.color}22, rgba(10, 10, 10, 0.82))`,
-              boxShadow: `0 10px 30px ${track.color}22`,
-              transform: `scale(${track.scale})`,
-            }}
+            className="barrage-pill px-3 py-1.5 sm:px-4 sm:py-2 sm:text-sm"
+            style={
+              {
+                '--pill': track.color,
+                transform: `scale(${track.scale})`,
+              } as React.CSSProperties
+            }
           >
             {track.label}
           </span>
         </motion.div>
       ))}
       {/* 顶部渐隐遮罩，让弹幕从顶部进入时柔和过渡，不突兀露出 */}
-      <div className="absolute inset-x-0 top-0 -z-10 h-36 bg-gradient-to-b from-[#050505] via-[#050505]/70 to-transparent" />
+      <div className="absolute inset-x-0 top-0 -z-10 h-36 bg-gradient-to-b from-paper via-paper/70 to-transparent dark:from-void dark:via-void/70" />
     </div>
   );
 };
