@@ -9,7 +9,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "skipLibCheck": true,
-    "types": ["node"],
+    // node：构建脚本用到的运行时类型；vite/client：import.meta.env（如 BASE_URL）。
+    "types": ["node", "vite/client"],
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,

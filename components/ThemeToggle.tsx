@@ -6,11 +6,17 @@ import { useMediaQuery } from '../src/hooks/useMediaQuery';
 type Theme = 'light' | 'dark';
 
 /**
- * 存储键与取值和 D-blog 完全一致：'theme' = 'light' | 'dark'，
- * 无保存值时由 index.html 的引导脚本按系统偏好解析（浅色为 CSS 默认）。
- * 仅显式点击才落盘，保证未干预时每次打开都重新跟随系统。
+ * 存储键与取值和 D-blog 完全一致：'theme' = 'light' | 'dark'。
+ * 区别在于本站默认浅色：index.html 的引导脚本只在显式保存过 'dark' 时才加 html.dark，
+ * 不再读取系统偏好。仅显式点击才落盘。
  */
 const THEME_STORAGE_KEY = 'theme';
+
+/** 与 index.html 的 theme-color / src/index.css 的明暗底色保持一致。 */
+const THEME_COLOR_META_CONTENT: Record<Theme, string> = {
+  light: '#f2f0e9',
+  dark: '#0a0a0a',
+};
 
 /** startViewTransition 尚未进入全部 TS 版本的 DOM lib，局部收窄避免全局 augmentation。 */
 type TransitionDocument = Document & {
@@ -35,6 +41,9 @@ export const ThemeToggle = () => {
 
     const applyChanges = () => {
       root.classList.toggle('dark', next === 'dark');
+      // 浏览器工具栏取色跟随实际生效的主题，而非系统偏好。
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', THEME_COLOR_META_CONTENT[next]);
     };
 
     // 不支持 View Transitions 或用户要求减弱动效时直接应用，不做全局 CSS 过渡兜底。

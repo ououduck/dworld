@@ -14,24 +14,28 @@
     <meta name="keywords" content="跑路的duck,pldduck,D的世界,个人主页,开源项目,技术博客,编程" />
     <link rel="canonical" href="https://www.pldduck.com/" />
 
-    <!-- ========== 主题（与 D-blog 同一套约定）========== -->
-    <!-- theme-color 按系统明暗分别声明：浅色 paper、深色 void -->
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f0e9" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a" />
-    <!-- color-scheme：声明明暗双模式，让 UA 组件在 CSS 加载前即适配深色，避免深色首帧闪白 -->
-    <meta name="color-scheme" content="light dark" />
-    <!-- 无闪烁主题引导：CSS 生效前把 html.dark 补上，避免深色用户看到一帧奶油底。
-         存储键 'theme'、取值 'light' | 'dark'、无保存值时按系统偏好 —— 与 D-blog 完全一致。
+    <!-- ========== 主题（沿用 D-blog 的存储约定，但默认浅色）========== -->
+    <!-- theme-color 先声明浅色，由下方引导脚本在判定为深色时改写为 void：
+         站点默认不跟随系统深色，若按 media 声明就会在「系统深色 + 页面浅色」时
+         让浏览器工具栏与页面明暗相反。 -->
+    <meta name="theme-color" content="#f2f0e9" />
+    <!-- color-scheme 只声明 light：UA 组件（滚动条 / 表单控件）默认按浅色渲染，
+         深色由 src/index.css 的 html.dark { color-scheme: dark } 覆盖。 -->
+    <meta name="color-scheme" content="light" />
+    <!-- 无闪烁主题引导：CSS 生效前补上 html.dark。默认浅色，仅当用户显式选过深色
+         （localStorage['theme'] === 'dark'）才切换，不再读取系统偏好。
+         存储键 'theme'、取值 'light' | 'dark' 与 D-blog 一致。
          CSP 的 script-src 已含 'unsafe-inline'（见 edgeone.json），内联脚本不会被拦。 -->
     <script>
       (function () {
+        var dark = false;
         try {
-          var theme = localStorage.getItem('theme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          if (theme === 'dark' || (theme !== 'light' && prefersDark)) {
-            document.documentElement.classList.add('dark');
-          }
+          dark = localStorage.getItem('theme') === 'dark';
         } catch (_) {}
+        if (!dark) return;
+        document.documentElement.classList.add('dark');
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', '#0a0a0a');
       })();
     </script>
 

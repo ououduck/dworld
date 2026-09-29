@@ -200,9 +200,24 @@ const App: React.FC = () => {
                 variants={fadeInUp}
                 className="flex items-center justify-between border-b border-zinc-200/90 py-6 dark:border-zinc-800/90"
               >
-                <div className="flex items-center gap-3">
-                  <PixelDuckSvg className="h-5 w-5" />
-                  <span className="font-serif text-base font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                {/* min-w-0 + truncate：品牌文案变长后在窄屏也不会挤出横向滚动条。 */}
+                <div className="flex min-w-0 items-center gap-2.5">
+                  {/* logo.png 为白底不透明图，落在米色纸面上会显出方块，
+                      故套一层发丝边框当作有意的图标砖（与站点卡片的图标位同款语言）。 */}
+                  <img
+                    src={`${import.meta.env.BASE_URL}logo.png`}
+                    alt=""
+                    width={36}
+                    height={36}
+                    decoding="async"
+                    fetchPriority="high"
+                    className="h-9 w-9 flex-none rounded-micro border border-zinc-200 bg-white object-cover dark:border-zinc-700"
+                  />
+                  <span className="truncate font-serif text-base font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                    D的世界
+                    <span className="mx-1.5 font-normal text-zinc-400 dark:text-zinc-500" aria-hidden="true">
+                      -
+                    </span>
                     {SITE_CONFIG.identity.domain}
                   </span>
                 </div>
